@@ -66,6 +66,7 @@
 #include "dust_import.h"
 #include "gif_writer.h"
 #include "mac_menu.h"
+#include "mac_update.h"
 #include "open_url.h"
 #include "product.h"
 #include "sdl_bridge.h"
@@ -2049,6 +2050,7 @@ void sdl_bridge_init(void) {
     toast_event_type = bridge_event_type + 3;
     SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
     mac_menu_install(menu_item, import_path, note_toast, input_chosen);
+    mac_update_install();
 }
 
 void sdl_bridge_show_control(int kind, int n, int value) {

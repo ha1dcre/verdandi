@@ -168,6 +168,7 @@ def build(bld):
             '../matron/src/platform/macos/gif_writer.c',
             '../matron/src/platform/macos/hardware_null.cc',
             '../matron/src/platform/macos/mac_menu.m',
+            '../matron/src/platform/macos/mac_update.m',
             '../matron/src/platform/macos/open_url.c',
             '../matron/src/platform/macos/sdl_bridge.cc',
             '../matron/src/platform/macos/stat_macos.cc',

@@ -81,6 +81,12 @@ Verdandi too.</p>
   <li>when Verdandi asks for the microphone, allow it: that is the audio input for softcut, tape
       and engines. (you can change it later under <i>Privacy &amp; Security &rarr; Microphone</i>.)</li>
 </ol>
+<p><b>updates:</b> when Verdandi starts (and once a day while it runs) it asks GitHub whether
+there is a newer release, and if so says it on the window: <b>Download</b> opens the release
+page, <b>Later</b> asks again at the next start, <b>Skip This Version</b> waits for the one
+after. it sends nothing but the app's version. to update, drag the new Verdandi onto
+Applications and replace the old one; dust in <code>~/norns</code> stays as it is.
+<i>Verdandi &rarr; Check for Updates Automatically</i> turns the check off.</p>
 
 <h2 id="first">3. first start</h2>
 <p>Verdandi starts the audio server, the SuperCollider engine and maiden, then opens its window with the norns device.
@@ -189,6 +195,9 @@ on or off (the window title then reads <i>Verdandi &middot; keys</i>).</p>
 <h3>the menu bar</h3>
 <table>
   <tr><th>menu</th><th>does</th></tr>
+  <tr><td>Verdandi &rarr; Check for Updates&hellip;</td><td>asks GitHub for a newer Verdandi now
+      (see <a href="#install">updates</a>); <i>Check for Updates Automatically</i> below it turns
+      the check at start and once a day on or off.</td></tr>
   <tr><td>File &rarr; Import Audio or Script&hellip; <kbd>&#8984;O</kbd></td><td>adds audio and
       scripts to norns, like dropping them on the window (see <a href="#files">files</a>); tick
       <i>Copy audio into norns</i> for a copy instead of a link.</td></tr>

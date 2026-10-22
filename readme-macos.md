@@ -46,6 +46,11 @@ the app bundles everything (jackd, SuperCollider, sc3-plugins, GNU tools, maiden
 dylibs rewritten to @rpath, see `macos/bundle_dylibs.py`) and is ad-hoc signed. its
 launcher (`macos/app-launcher.sh`) uses `~/norns` as the norns home.
 
+the version is `CFBundleShortVersionString` in `macos/make-app.sh` (and `macos/auv3/build-appex.sh`).
+the app compares it with the latest GitHub release (`matron/src/platform/macos/mac_update.m`, at
+start and once a day; the launcher passes the app's path as `VERDANDI_APP`), so a release's tag
+must be that version (`v0.1.2`) and must not be a pre-release: `/releases/latest` skips those.
+
 the AUv3 (`macos/auv3/`, "Verdandi", type `aumf`, subtype `vrdn`, manufacturer `Vrdn`) is a sandboxed
 extension inside the app. it sends the DAW's audio and MIDI over UDP on 127.0.0.1 to
 `auv3_bridge`, a jack client next to norns that resamples between the two clocks (jack's
@@ -167,6 +172,8 @@ cc -fobjc-arc macos/tests/drop_test.m mac_menu.o app_audio.o -I $P $(pkg-config 
    -framework AppKit -framework CoreAudio -framework UniformTypeIdentifiers -o /tmp/dropt && /tmp/dropt [--live]
 cc -fobjc-arc macos/tests/app_input_test.m $(pkg-config --cflags --libs jack) -framework AudioToolbox \
    -framework Foundation -o /tmp/ait && /tmp/ait build/macos/app_input   # own jack server, tone app
+cc -c $P/mac_update.m $P/open_url.c -I $P && cc -fobjc-arc macos/tests/update_test.m mac_update.o \
+   open_url.o -I $P -framework AppKit -o /tmp/upt && /tmp/upt [--github]   # window off the screen
 NORNS_HARDWARE_KEYS=1 <lua 5.3> macos/tests/keyboard_hardware_test.lua
 <lua 5.3> macos/tests/menu_pages_test.lua
 <lua 5.3> macos/tests/input_modes_test.lua

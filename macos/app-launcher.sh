@@ -24,6 +24,8 @@ fi
 
 export NORNS_DEPS="$R/deps"
 export NORNS_MAIDEN="$R/maiden"
+# the app itself: its version, for the update check (mac_update.m)
+export VERDANDI_APP="$(dirname "$CONTENTS")"
 # a finder launch has a minimal PATH; norns.sh adds the bundled tools in front
 export PATH="/usr/bin:/bin:/usr/sbin:/sbin"
 

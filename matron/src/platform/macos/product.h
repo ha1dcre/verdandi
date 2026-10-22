@@ -9,3 +9,6 @@
 #pragma once
 
 #define MACOS_PRODUCT "Verdandi"
+
+// where its releases are (mac_update.m asks for the latest)
+#define MACOS_PRODUCT_REPO "ha1dcre/verdandi"
