@@ -28,7 +28,7 @@ cat > "$OUT/Contents/Info.plist" <<EOF
     <key>CFBundleIdentifier</key><string>community.verdandi.app.au</string>
     <key>CFBundleName</key><string>verdandi-au</string>
     <key>CFBundlePackageType</key><string>XPC!</string>
-    <key>CFBundleShortVersionString</key><string>0.1.2</string>
+    <key>CFBundleShortVersionString</key><string>0.1.3</string>
     <key>CFBundleVersion</key><string>$VERSION</string>
     <key>LSMinimumSystemVersion</key><string>13.0</string>
     <key>NSExtension</key>

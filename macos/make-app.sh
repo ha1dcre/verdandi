@@ -101,7 +101,7 @@ cat > "$APP/Contents/Info.plist" <<EOF
     <key>CFBundleIdentifier</key><string>community.verdandi.app</string>
     <key>CFBundleExecutable</key><string>Verdandi</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>0.1.2</string>
+    <key>CFBundleShortVersionString</key><string>0.1.3</string>
     <key>CFBundleVersion</key><string>$VERSION</string>
     <key>LSMinimumSystemVersion</key><string>$MIN</string>
     <key>LSUIElement</key><true/>
