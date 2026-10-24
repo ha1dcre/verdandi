@@ -29,7 +29,8 @@ if [ -z "$DEPS" ]; then
     while [ "$d" != "/" ] && [ ! -d "$d/deps/prefix" ]; do d="$(dirname "$d")"; done
     DEPS="$d/deps/prefix"
 fi
-BREW="${HOMEBREW_PREFIX:-/opt/homebrew}"
+if [ "$(uname -m)" = arm64 ]; then BREW_DEFAULT=/opt/homebrew; else BREW_DEFAULT=/usr/local; fi
+BREW="${HOMEBREW_PREFIX:-$BREW_DEFAULT}"
 
 export HOME="$NORNS_HOME"
 SC_BIN="$DEPS/SuperCollider/SuperCollider.app/Contents/MacOS"
