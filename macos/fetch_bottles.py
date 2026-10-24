@@ -28,7 +28,14 @@ TOP = ['jack', 'liblo', 'libsndfile', 'cairo', 'sdl2-compat', 'sdl3', 'fftw', 'r
 # built from source by setup-deps.sh (into <out>/<tag>/<formula>/<version>-source): their
 # bottle needs a newer macOS than its tag says (jack's: 15.7). their dependencies are fetched
 SOURCE = {'jack'}
-TAGS = {'13': 'arm64_ventura', '14': 'arm64_sonoma', '15': 'arm64_sequoia', '26': 'arm64_tahoe'}
+NAMES = {'13': 'ventura', '14': 'sonoma', '15': 'sequoia', '26': 'tahoe'}
+# Apple silicon bottles carry an arm64_ prefix, Intel ones the bare macOS name.
+# NORNS_ARCH=x86_64|arm64 overrides the running machine (e.g. building Intel under Rosetta)
+ARCH = os.environ.get('NORNS_ARCH') or os.uname().machine
+TAGS = {k: ('arm64_' + v if ARCH == 'arm64' else v) for k, v in NAMES.items()}
+# Intel tags, newest first: the fallbacks for a missing Intel bottle
+INTEL_ORDER = ['tahoe', 'sequoia', 'sonoma', 'ventura', 'monterey', 'big_sur']
+OLDER_INTEL = {v: INTEL_ORDER[i + 1:] for i, v in enumerate(INTEL_ORDER)}
 
 
 def tag():
@@ -67,6 +74,17 @@ def fetch(name, out, t):
     f = formula(name)
     files = f['bottle']['stable']['files']
     entry = files.get(t) or files.get('all')
+    if entry is None and ARCH != 'arm64':
+        # Homebrew no longer builds Intel bottles for every macOS: take the newest one for an
+        # older macOS (they run on newer ones), e.g. sonoma's on sequoia
+        for older in OLDER_INTEL.get(t, []):
+            if older in files:
+                print('fetch_bottles: %s: no %s bottle, using %s' % (name, t, older))
+                entry = files[older]
+                break
+    if entry is None and ARCH != 'arm64':
+        # no Intel macOS bottle at all: the one homebrew built from source on this Mac
+        return local_keg(name, out)
     if entry is None:
         raise SystemExit('fetch_bottles: %s has no %s bottle (%s)' % (name, t, ', '.join(files)))
     dest = os.path.join(out, name, version(f))
@@ -91,6 +109,23 @@ def fetch(name, out, t):
     os.remove(tmp)
     if not os.path.isdir(dest):
         raise SystemExit('fetch_bottles: %s: no %s in the bottle' % (name, dest))
+    return dest, True
+
+
+def local_keg(name, out):
+    """the installed keg in homebrew's Cellar, copied in a bottle's layout"""
+    brew = os.environ.get('HOMEBREW_PREFIX') or ('/opt/homebrew' if ARCH == 'arm64' else '/usr/local')
+    cellar = os.path.join(brew, 'Cellar', name)
+    versions = sorted(os.listdir(cellar)) if os.path.isdir(cellar) else []
+    if not versions:
+        raise SystemExit('fetch_bottles: %s has no Intel bottle and is not installed: run  brew install %s'
+                         % (name, name))
+    v = versions[-1]
+    dest = os.path.join(out, name, v)
+    if os.path.isdir(dest):
+        return dest, False
+    print('fetch_bottles: %s: no Intel bottle, using the one built on this Mac (%s)' % (name, cellar))
+    shutil.copytree(os.path.join(cellar, v), dest, symlinks=True)
     return dest, True
 
 

@@ -12,7 +12,8 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 d="$REPO"
 while [ "$d" != "/" ] && [ ! -d "$d/deps/prefix" ]; do d="$(dirname "$d")"; done
 DEPS="${NORNS_DEPS:-$d/deps}"
-BREW="${HOMEBREW_PREFIX:-/opt/homebrew}"
+if [ "$(uname -m)" = arm64 ]; then BREW_DEFAULT=/opt/homebrew; else BREW_DEFAULT=/usr/local; fi
+BREW="${HOMEBREW_PREFIX:-$BREW_DEFAULT}"
 mkdir -p "$DEPS/.home"
 CONFIGURE=0
 { [ "${1:-}" = "configure" ] || [ ! -f "$REPO/build/c4che/_cache.py" ]; } && CONFIGURE=1
