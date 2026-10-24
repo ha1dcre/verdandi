@@ -4,10 +4,11 @@
  * cc -std=c11 -Wall -Wextra -I matron/src/platform/macos $(pkg-config --cflags --libs cairo) \
  *    macos/tests/device_skin_test.c matron/src/platform/macos/device_skin.c \
  *    matron/src/platform/macos/vgrid_skin.c matron/src/platform/macos/varc_skin.c \
- *    matron/src/platform/macos/vkeys_skin.c -o /tmp/dst && /tmp/dst [out_dir]
+ *    matron/src/platform/macos/vkeys_skin.c matron/src/platform/macos/skin_theme.c \
+ *    -o /tmp/dst && /tmp/dst [out_dir [flat]]
  *
  * with out_dir it also writes skin_<w>x<h>.png renders (and the grid, arc and keyboard
- * windows) to look at.
+ * windows) to look at; with flat, in the dark flat style.
  */
 
 #include <math.h>
@@ -15,6 +16,7 @@
 #include <string.h>
 
 #include "device_skin.h"
+#include "skin_theme.h"
 #include "varc_skin.h"
 #include "vgrid_skin.h"
 #include "vkeys_skin.h"
@@ -306,6 +308,9 @@ static void test_vkeys(const char *dir) {
 }
 
 int main(int argc, char **argv) {
+    if (argc > 2 && strcmp(argv[2], "flat") == 0) {
+        skin_set_style(SKIN_STYLE_FLAT);
+    }
     test_varc(argc > 1 ? argv[1] : NULL);
     test_vkeys(argc > 1 ? argv[1] : NULL);
     for (int size = 1; size <= 3; size++) {

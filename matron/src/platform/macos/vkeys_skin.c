@@ -5,7 +5,10 @@
 #include <math.h>
 #include <stdio.h>
 
+#include "skin_theme.h"
 #include "vkeys_skin.h"
+
+#define FLAT (skin_style() == SKIN_STYLE_FLAT)
 
 #define MARGIN 18.0
 #define BODY_PAD 14.0
@@ -184,6 +187,15 @@ static void key_shape(cairo_t *cr, double x, double y, double w, double h, doubl
 
 static void draw_body(cairo_t *cr) {
     double w = body_w(), h = body_h();
+    if (FLAT) {
+        rounded_rect(cr, MARGIN, MARGIN, w, h, 14);
+        flat_rgb(cr, FLAT_BODY, 1);
+        cairo_fill(cr);
+        rounded_rect(cr, keys_x() - 3, keys_y() - 3, WHITES * WHITE_W + 6, WHITE_H + 6, 5);
+        flat_rgb(cr, FLAT_BG, 1);
+        cairo_fill(cr);
+        return;
+    }
     for (int i = 8; i >= 1; i--) {
         rounded_rect(cr, MARGIN - i * 0.8, MARGIN - i * 0.5 + 4, w + i * 1.6, h + i * 1.6, 14 + i);
         cairo_set_source_rgba(cr, 0, 0, 0, 0.05);
@@ -226,29 +238,38 @@ static void draw_control(cairo_t *cr, const ctrl_t *c, const vkeys_state_t *st) 
     double y = ctrl_y();
     int down = st->button_down == c->id;
     double dy = down ? 1.2 : 0;
-    rounded_rect(cr, c->x - 2.5, y - 2.5, c->w + 5, CTRL_H + 5, 9);
-    cairo_pattern_t *p = cairo_pattern_create_linear(0, y - 2.5, 0, y + CTRL_H + 2.5);
-    cairo_pattern_add_color_stop_rgb(p, 0, 0.557, 0.569, 0.588);
-    cairo_pattern_add_color_stop_rgb(p, 1, 0.890, 0.898, 0.910);
-    cairo_set_source(cr, p);
-    cairo_fill(cr);
-    cairo_pattern_destroy(p);
-    rounded_rect(cr, c->x, y + dy, c->w, CTRL_H, 7);
-    p = cairo_pattern_create_linear(0, y + dy, 0, y + dy + CTRL_H);
-    cairo_pattern_add_color_stop_rgb(p, 0, down ? 0.137 : 0.239, down ? 0.141 : 0.247, down ? 0.153 : 0.263);
-    cairo_pattern_add_color_stop_rgb(p, 1, down ? 0.090 : 0.137, down ? 0.094 : 0.141, down ? 0.102 : 0.153);
-    cairo_set_source(cr, p);
-    cairo_fill(cr);
-    cairo_pattern_destroy(p);
-    if (st->hover == c->id && !down) {
+    if (FLAT) {
+        dy = 0;
         rounded_rect(cr, c->x, y, c->w, CTRL_H, 7);
-        cairo_set_source_rgba(cr, 1, 1, 1, 0.07);
+        flat_rgb(cr, down ? FLAT_FACE_DOWN : st->hover == c->id ? FLAT_FACE_UP
+                                                                : FLAT_FACE,
+                 1);
         cairo_fill(cr);
+    } else {
+        rounded_rect(cr, c->x - 2.5, y - 2.5, c->w + 5, CTRL_H + 5, 9);
+        cairo_pattern_t *p = cairo_pattern_create_linear(0, y - 2.5, 0, y + CTRL_H + 2.5);
+        cairo_pattern_add_color_stop_rgb(p, 0, 0.557, 0.569, 0.588);
+        cairo_pattern_add_color_stop_rgb(p, 1, 0.890, 0.898, 0.910);
+        cairo_set_source(cr, p);
+        cairo_fill(cr);
+        cairo_pattern_destroy(p);
+        rounded_rect(cr, c->x, y + dy, c->w, CTRL_H, 7);
+        p = cairo_pattern_create_linear(0, y + dy, 0, y + dy + CTRL_H);
+        cairo_pattern_add_color_stop_rgb(p, 0, down ? 0.137 : 0.239, down ? 0.141 : 0.247, down ? 0.153 : 0.263);
+        cairo_pattern_add_color_stop_rgb(p, 1, down ? 0.090 : 0.137, down ? 0.094 : 0.141, down ? 0.102 : 0.153);
+        cairo_set_source(cr, p);
+        cairo_fill(cr);
+        cairo_pattern_destroy(p);
+        if (st->hover == c->id && !down) {
+            rounded_rect(cr, c->x, y, c->w, CTRL_H, 7);
+            cairo_set_source_rgba(cr, 1, 1, 1, 0.07);
+            cairo_fill(cr);
+        }
     }
     double mid = y + dy + CTRL_H / 2;
     if (c->id == VK_LATCH) {
         double lx = c->x + 15;
-        if (st->latch) {
+        if (st->latch && !FLAT) {
             cairo_pattern_t *gl = cairo_pattern_create_radial(lx, mid, 0, lx, mid, 10);
             cairo_pattern_add_color_stop_rgba(gl, 0, 1, 0.69, 0.29, 0.55);
             cairo_pattern_add_color_stop_rgba(gl, 1, 1, 0.69, 0.29, 0);
@@ -258,13 +279,16 @@ static void draw_control(cairo_t *cr, const ctrl_t *c, const vkeys_state_t *st) 
             cairo_pattern_destroy(gl);
         }
         cairo_arc(cr, lx, mid, 3.4, 0, 2 * M_PI);
-        if (st->latch) {
+        if (FLAT) {
+            flat_rgb(cr, st->latch ? FLAT_ACCENT : FLAT_LINE, 1);
+        } else if (st->latch) {
             cairo_set_source_rgb(cr, 1, 0.77, 0.42);
         } else {
             cairo_set_source_rgb(cr, 0.23, 0.24, 0.25);
         }
         cairo_fill(cr);
-        double l = st->latch ? 1 : 0.765;
+        double l = FLAT ? (st->latch ? 0.83 : 0.60) : st->latch ? 1
+                                                                : 0.765;
         text_in(cr, "LATCH", c->x + 24, c->w - 28, mid, 12, l, l, l);
         return;
     }
@@ -278,7 +302,11 @@ static void draw_control(cairo_t *cr, const ctrl_t *c, const vkeys_state_t *st) 
         cairo_move_to(cr, cx, mid - 6);
         cairo_line_to(cr, cx, mid + 6);
     }
-    cairo_set_source_rgb(cr, 0.765, 0.776, 0.796);
+    if (FLAT) {
+        flat_rgb(cr, FLAT_SOFT, 1);
+    } else {
+        cairo_set_source_rgb(cr, 0.765, 0.776, 0.796);
+    }
     cairo_stroke(cr);
     cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
 }
@@ -291,6 +319,12 @@ static void draw_value(cairo_t *cr, const char *top, const char *value, double x
     cairo_text_extents_t te;
     cairo_text_extents(cr, top, &te);
     cairo_move_to(cr, x + (LABEL_W - te.width) / 2 - te.x_bearing, y + 9);
+    if (FLAT) {
+        flat_rgb(cr, FLAT_DIM, 1);
+        cairo_show_text(cr, top);
+        text_in(cr, value, x, LABEL_W, y + CTRL_H / 2 + 6, 15, 0.83, 0.84, 0.85);
+        return;
+    }
     cairo_set_source_rgba(cr, 0.29, 0.30, 0.32, 0.8);
     cairo_show_text(cr, top);
     text_in(cr, value, x, LABEL_W, y + CTRL_H / 2 + 6, 15, 0.20, 0.21, 0.23);
@@ -311,6 +345,44 @@ static void draw_keys(cairo_t *cr, const vkeys_state_t *st) {
             }
             double x = key_left(k), w = black ? BLACK_W : WHITE_W, h = black ? BLACK_H : WHITE_H;
             int on = st->held[k] != 0;
+            int hover = st->hover == VK_KEY + k && !on;
+            if (FLAT) {
+                // plain keys: grey and near black, amber while held
+                if (black) {
+                    key_shape(cr, x, y, w, h, 3);
+                    flat_rgb(cr, on ? FLAT_ACCENT : hover ? FLAT_FACE
+                                                          : 0x0f0f11,
+                             1);
+                } else {
+                    key_shape(cr, x + 0.8, y, w - 1.6, h - 1, 4);
+                    flat_rgb(cr, on ? FLAT_ACCENT : hover ? 0x3a3a40
+                                                          : 0x2e2e33,
+                             1);
+                }
+                cairo_fill(cr);
+                if (!black && k % 12 == 0) {
+                    char name[8];
+                    note_name(vkeys_note(st, k), name, sizeof name);
+                    cairo_select_font_face(cr, "Helvetica Neue", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+                    cairo_set_font_size(cr, 11);
+                    cairo_text_extents_t te;
+                    cairo_text_extents(cr, name, &te);
+                    cairo_move_to(cr, x + (w - te.width) / 2 - te.x_bearing, y + h - 12);
+                    flat_rgb(cr, on ? FLAT_BODY : FLAT_SOFT, 1);
+                    cairo_show_text(cr, name);
+                }
+                const char *label = st->typed_label[k];
+                if (label != NULL) {
+                    cairo_select_font_face(cr, "Helvetica Neue", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+                    cairo_set_font_size(cr, 10);
+                    cairo_text_extents_t te;
+                    cairo_text_extents(cr, label, &te);
+                    cairo_move_to(cr, x + (w - te.width) / 2 - te.x_bearing, black ? y + h - 10 : y + h - 30);
+                    flat_rgb(cr, on ? FLAT_BODY : FLAT_DIM, 1);
+                    cairo_show_text(cr, label);
+                }
+                continue;
+            }
             if (!black) {
                 key_shape(cr, x + 0.8, y, w - 1.6, h - 1, 4);
                 cairo_pattern_t *p = cairo_pattern_create_linear(0, y, 0, y + h);
@@ -382,6 +454,9 @@ static void draw_keys(cairo_t *cr, const vkeys_state_t *st) {
             }
         }
     }
+    if (FLAT) {
+        return;
+    }
     // shade under the strip edge
     cairo_rectangle(cr, keys_x(), y, WHITES * WHITE_W, 5);
     cairo_pattern_t *p = cairo_pattern_create_linear(0, y, 0, y + 5);
@@ -394,7 +469,11 @@ static void draw_keys(cairo_t *cr, const vkeys_state_t *st) {
 
 void vkeys_skin_draw(cairo_t *cr, const vkeys_geom_t *g, int w, int h, const vkeys_state_t *st) {
     cairo_save(cr);
-    cairo_set_source_rgb(cr, 0.10, 0.10, 0.11);
+    if (FLAT) {
+        flat_rgb(cr, FLAT_BG, 1);
+    } else {
+        cairo_set_source_rgb(cr, 0.10, 0.10, 0.11);
+    }
     cairo_rectangle(cr, 0, 0, w, h);
     cairo_fill(cr);
     cairo_translate(cr, g->ox, g->oy);

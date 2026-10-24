@@ -97,6 +97,26 @@ static void note(NSString *text) {
 
 static NornsMenuTarget *target = nil;
 static NSMenuItem *gif_item = nil;
+static NSMenuItem *skin_items[2] = {nil, nil}; // [MAC_SKIN_*]
+static int skin_now = MAC_SKIN_DEVICE;
+
+// the look is kept with the app's other settings (mac_update.m)
+#define SKIN_DEFAULTS_SUITE @"community.verdandi.app"
+#define SKIN_KEY @"skin"
+
+static NSUserDefaults *skin_defaults(void) {
+    static NSUserDefaults *d = nil;
+    if (d == nil) {
+        d = [[NSUserDefaults alloc] initWithSuiteName:SKIN_DEFAULTS_SUITE];
+    }
+    return d;
+}
+
+static void check_skin(void) {
+    for (int i = 0; i < 2; i++) {
+        skin_items[i].state = i == skin_now ? NSControlStateValueOn : NSControlStateValueOff;
+    }
+}
 
 static NSMenuItem *add(NSMenu *menu, NSString *title, NSString *key, NSEventModifierFlags mods, int tag) {
     NSMenuItem *item = [menu addItemWithTitle:title action:@selector(act:) keyEquivalent:key];
@@ -150,11 +170,18 @@ void mac_menu_install(void (*on_item)(int id), void (*on_import)(const char *pat
         [apps release];
     }
 
+    NSMenu *view = [[NSMenu alloc] initWithTitle:@"View"];
+    skin_items[MAC_SKIN_DEVICE] = [add(view, @"Device Skin", @"", 0, MAC_MENU_SKIN_DEVICE) retain];
+    skin_items[MAC_SKIN_FLAT] = [add(view, @"Dark Flat Skin", @"", 0, MAC_MENU_SKIN_FLAT) retain];
+    check_skin();
+
     // after the app menu, before SDL's Window menu
     insert(bar, file, 1);
     insert(bar, devices, 2);
+    insert(bar, view, 3);
     [file release];
     [devices release];
+    [view release];
 }
 
 void mac_set_app_name(const char *name) {
@@ -163,6 +190,17 @@ void mac_set_app_name(const char *name) {
 
 void mac_menu_set_input(int input) {
     input_now = input;
+}
+
+int mac_menu_saved_skin(void) {
+    skin_now = [[skin_defaults() stringForKey:SKIN_KEY] isEqualToString:@"flat"] ? MAC_SKIN_FLAT : MAC_SKIN_DEVICE;
+    return skin_now;
+}
+
+void mac_menu_set_skin(int skin) {
+    skin_now = skin == MAC_SKIN_FLAT ? MAC_SKIN_FLAT : MAC_SKIN_DEVICE;
+    check_skin();
+    [skin_defaults() setObject:skin_now == MAC_SKIN_FLAT ? @"flat" : @"device" forKey:SKIN_KEY];
 }
 
 void mac_menu_set_recording(int on) {

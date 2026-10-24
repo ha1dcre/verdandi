@@ -7,6 +7,9 @@
 #include <stdint.h>
 
 #include "device_skin.h"
+#include "skin_theme.h"
+
+#define FLAT (skin_style() == SKIN_STYLE_FLAT)
 
 typedef struct {
     double x, y;
@@ -258,8 +261,70 @@ static void draw_washer(cairo_t *cr, pt_t c) {
     cairo_stroke(cr);
 }
 
+//--- dark flat: the same places, drawn as plain shapes
+
+// the control's name centred under it
+static void flat_label(cairo_t *cr, pt_t c, double r, const char *text) {
+    cairo_select_font_face(cr, "Helvetica Neue", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    cairo_set_font_size(cr, 12);
+    cairo_text_extents_t te;
+    cairo_text_extents(cr, text, &te);
+    cairo_move_to(cr, c.x - te.width / 2 - te.x_bearing, c.y + r + 22);
+    flat_rgb(cr, FLAT_DIM, 1);
+    cairo_show_text(cr, text);
+}
+
+static void flat_static(cairo_t *cr, const skin_geom_t *g) {
+    flat_rgb(cr, FLAT_BG, 1);
+    cairo_paint(cr);
+    cairo_translate(cr, g->ox, g->oy);
+    cairo_scale(cr, g->s, g->s);
+    rounded_rect(cr, 0, 0, SKIN_W, SKIN_H, 22);
+    flat_rgb(cr, FLAT_BODY, 1);
+    cairo_fill(cr);
+    // the screen: black, a hairline round it (outside the part the oled redraws)
+    rounded_rect(cr, bezel_x, bezel_y, bezel_w, bezel_h, 7);
+    hex(cr, "000000", 1);
+    cairo_fill(cr);
+    rounded_rect(cr, bezel_x - 2.5, bezel_y - 2.5, bezel_w + 5, bezel_h + 5, 9);
+    cairo_set_line_width(cr, 1.5);
+    flat_rgb(cr, FLAT_LINE, 1);
+    cairo_stroke(cr);
+    static const char *names[3][2] = {{"K1", "E1"}, {"K2", "E2"}, {"K3", "E3"}};
+    for (int i = 0; i < 3; i++) {
+        flat_label(cr, key_pos[i], key_r, names[i][0]);
+        flat_label(cr, enc_pos[i], enc_r, names[i][1]);
+    }
+}
+
+// a round key: lit while held
+static void flat_key(cairo_t *cr, pt_t c, int down, int hover) {
+    circle(cr, c.x, c.y, 25);
+    flat_rgb(cr, down ? FLAT_ACCENT : hover ? FLAT_FACE_UP
+                                            : FLAT_FACE,
+             1);
+    cairo_fill(cr);
+}
+
+// an endless knob: a dot walks round it with the turns
+#define FLAT_DOT_STEP (2 * M_PI / 64)
+static void flat_knob(cairo_t *cr, pt_t c, int ticks, int hover) {
+    circle(cr, c.x, c.y, 31);
+    flat_rgb(cr, hover ? FLAT_FACE_UP : FLAT_FACE, 1);
+    cairo_fill(cr);
+    double a = -M_PI / 2 + ticks * FLAT_DOT_STEP;
+    circle(cr, c.x + cos(a) * 22, c.y + sin(a) * 22, 3.4);
+    flat_rgb(cr, FLAT_TEXT, 1);
+    cairo_fill(cr);
+}
+
 void skin_draw_static(cairo_t *cr, const skin_geom_t *g) {
     cairo_save(cr);
+    if (FLAT) {
+        flat_static(cr, g);
+        cairo_restore(cr);
+        return;
+    }
     hex(cr, "1a1a1c", 1);
     cairo_paint(cr);
 
@@ -369,6 +434,12 @@ static void draw_knob(cairo_t *cr, pt_t c, int ticks, int hover) {
 
 // a lit (amber) or dark led
 static void draw_led(cairo_t *cr, double x, double y, int on) {
+    if (FLAT) {
+        circle(cr, x, y, 3.6);
+        flat_rgb(cr, on ? FLAT_ACCENT : FLAT_LINE, 1);
+        cairo_fill(cr);
+        return;
+    }
     if (on) {
         cairo_pattern_t *p = cairo_pattern_create_radial(x, y, 0, x, y, 11);
         stop(p, 0, "ffb04a", 0.55);
@@ -392,7 +463,11 @@ static void draw_out_arrow(cairo_t *cr, double x, double y) {
     cairo_move_to(cr, x - 1, y - 3.5);
     cairo_line_to(cr, x + 3.5, y - 3.5);
     cairo_line_to(cr, x + 3.5, y + 1);
-    hex(cr, "8d9096", 1);
+    if (FLAT) {
+        flat_rgb(cr, FLAT_DIM, 1);
+    } else {
+        hex(cr, "8d9096", 1);
+    }
     cairo_stroke(cr);
     cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
 }
@@ -406,35 +481,44 @@ static void draw_button(cairo_t *cr, int i, const skin_state_t *st) {
               (id == SKIN_MIC && st->input != SKIN_INPUT_OFF);
     double x = b->x, y = button_y, dy = down ? 1.2 : 0;
 
-    // well
-    rounded_rect(cr, x - 2.5, y - 2.5, button_w + 5, button_h + 5, 10);
-    cairo_pattern_t *p = cairo_pattern_create_linear(0, y - 2.5, 0, y + button_h + 2.5);
-    stop(p, 0, "8e9196", 1);
-    stop(p, 1, "e3e5e8", 1);
-    cairo_set_source(cr, p);
-    cairo_fill(cr);
-    cairo_pattern_destroy(p);
-
-    // face
-    rounded_rect(cr, x, y + dy, button_w, button_h, 8);
-    p = cairo_pattern_create_linear(0, y + dy, 0, y + dy + button_h);
-    stop(p, 0, down ? "232427" : "3d3f43", 1);
-    stop(p, 1, down ? "17181a" : "232427", 1);
-    cairo_set_source(cr, p);
-    cairo_fill(cr);
-    cairo_pattern_destroy(p);
-    cairo_set_line_width(cr, 1);
-    rounded_rect(cr, x + 0.5, y + dy + 0.5, button_w - 1, button_h - 1, 7.5);
-    p = cairo_pattern_create_linear(0, y + dy, 0, y + dy + button_h);
-    stop(p, 0, "ffffff", down ? 0.06 : 0.22);
-    stop(p, 0.5, "ffffff", 0);
-    cairo_set_source(cr, p);
-    cairo_stroke(cr);
-    cairo_pattern_destroy(p);
-    if (st->hover == id && !down) {
+    if (FLAT) {
+        dy = 0;
         rounded_rect(cr, x, y, button_w, button_h, 8);
-        cairo_set_source_rgba(cr, 1, 1, 1, 0.07);
+        flat_rgb(cr, down ? FLAT_FACE_DOWN : st->hover == id ? FLAT_FACE_UP
+                                                             : FLAT_FACE,
+                 1);
         cairo_fill(cr);
+    } else {
+        // well
+        rounded_rect(cr, x - 2.5, y - 2.5, button_w + 5, button_h + 5, 10);
+        cairo_pattern_t *p = cairo_pattern_create_linear(0, y - 2.5, 0, y + button_h + 2.5);
+        stop(p, 0, "8e9196", 1);
+        stop(p, 1, "e3e5e8", 1);
+        cairo_set_source(cr, p);
+        cairo_fill(cr);
+        cairo_pattern_destroy(p);
+
+        // face
+        rounded_rect(cr, x, y + dy, button_w, button_h, 8);
+        p = cairo_pattern_create_linear(0, y + dy, 0, y + dy + button_h);
+        stop(p, 0, down ? "232427" : "3d3f43", 1);
+        stop(p, 1, down ? "17181a" : "232427", 1);
+        cairo_set_source(cr, p);
+        cairo_fill(cr);
+        cairo_pattern_destroy(p);
+        cairo_set_line_width(cr, 1);
+        rounded_rect(cr, x + 0.5, y + dy + 0.5, button_w - 1, button_h - 1, 7.5);
+        p = cairo_pattern_create_linear(0, y + dy, 0, y + dy + button_h);
+        stop(p, 0, "ffffff", down ? 0.06 : 0.22);
+        stop(p, 0.5, "ffffff", 0);
+        cairo_set_source(cr, p);
+        cairo_stroke(cr);
+        cairo_pattern_destroy(p);
+        if (st->hover == id && !down) {
+            rounded_rect(cr, x, y, button_w, button_h, 8);
+            cairo_set_source_rgba(cr, 1, 1, 1, 0.07);
+            cairo_fill(cr);
+        }
     }
 
     // led or arrow on the left, label in the rest
@@ -463,7 +547,11 @@ static void draw_button(cairo_t *cr, int i, const skin_state_t *st) {
         size -= 0.5;
     }
     cairo_move_to(cr, area + (area_w - te.width) / 2 - te.x_bearing, mid - te.height / 2 - te.y_bearing);
-    hex(cr, lit ? "ffffff" : "c3c6cb", 1);
+    if (FLAT) {
+        flat_rgb(cr, lit ? FLAT_TEXT : FLAT_SOFT, 1);
+    } else {
+        hex(cr, lit ? "ffffff" : "c3c6cb", 1);
+    }
     cairo_show_text(cr, label);
 }
 
@@ -480,12 +568,18 @@ static void draw_toast(cairo_t *cr, const char *text, int recording) {
         w = right - 300;
     }
     double x = right - w, y = cy - h / 2;
-    rounded_rect(cr, x, y + 2, w, h, h / 2);
-    cairo_set_source_rgba(cr, 0, 0, 0, 0.18);
-    cairo_fill(cr);
-    rounded_rect(cr, x, y, w, h, h / 2);
-    hex(cr, "1d1e21", 0.92);
-    cairo_fill(cr);
+    if (FLAT) {
+        rounded_rect(cr, x, y, w, h, h / 2);
+        flat_rgb(cr, FLAT_FACE_DOWN, 1);
+        cairo_fill(cr);
+    } else {
+        rounded_rect(cr, x, y + 2, w, h, h / 2);
+        cairo_set_source_rgba(cr, 0, 0, 0, 0.18);
+        cairo_fill(cr);
+        rounded_rect(cr, x, y, w, h, h / 2);
+        hex(cr, "1d1e21", 0.92);
+        cairo_fill(cr);
+    }
     if (recording) {
         circle(cr, x + 22, cy, 6);
         hex(cr, "ff453a", 1);
@@ -498,6 +592,26 @@ static void draw_toast(cairo_t *cr, const char *text, int recording) {
     hex(cr, "f2f3f5", 1);
     cairo_show_text(cr, text);
     cairo_restore(cr);
+}
+
+// MUTE, dark flat: a button like the others
+static void flat_mute(cairo_t *cr, const skin_state_t *st) {
+    int down = st->button_down == SKIN_MUTE;
+    rounded_rect(cr, mute_x, mute_y, mute_w, mute_h, 7);
+    flat_rgb(cr, down ? FLAT_FACE_DOWN : st->hover == SKIN_MUTE ? FLAT_FACE_UP
+                                                                : FLAT_FACE,
+             1);
+    cairo_fill(cr);
+    double mid = mute_y + mute_h / 2;
+    draw_led(cr, mute_x + 10, mid, st->out_muted);
+    cairo_select_font_face(cr, "Helvetica Neue", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    cairo_set_font_size(cr, 10);
+    cairo_text_extents_t te;
+    cairo_text_extents(cr, "MUTE", &te);
+    double area = mute_x + 17, area_w = mute_w - 19;
+    cairo_move_to(cr, area + (area_w - te.width) / 2 - te.x_bearing, mid - te.height / 2 - te.y_bearing);
+    flat_rgb(cr, st->out_muted ? FLAT_TEXT : FLAT_SOFT, 1);
+    cairo_show_text(cr, "MUTE");
 }
 
 // the OUT fader: a slot, the level lit up to the cap, the cap; MUTE under it
@@ -513,12 +627,21 @@ static void draw_fader(cairo_t *cr, const skin_state_t *st) {
     cairo_text_extents_t te;
     cairo_text_extents(cr, "OUT", &te);
     double lx = fader_x - te.width / 2 - te.x_bearing, ly = fader_top - fader_cap_h / 2 - 12;
-    cairo_move_to(cr, lx + 0.6, ly + 1.4);
-    cairo_set_source_rgba(cr, 1, 1, 1, 0.55);
-    cairo_show_text(cr, "OUT");
-    cairo_move_to(cr, lx, ly);
-    hex(cr, "4a4d52", 0.75);
-    cairo_show_text(cr, "OUT");
+    if (FLAT) {
+        cairo_select_font_face(cr, "Helvetica Neue", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+        cairo_set_font_size(cr, 12);
+        cairo_text_extents(cr, "OUT", &te);
+        cairo_move_to(cr, fader_x - te.width / 2 - te.x_bearing, ly);
+        flat_rgb(cr, FLAT_DIM, 1);
+        cairo_show_text(cr, "OUT");
+    } else {
+        cairo_move_to(cr, lx + 0.6, ly + 1.4);
+        cairo_set_source_rgba(cr, 1, 1, 1, 0.55);
+        cairo_show_text(cr, "OUT");
+        cairo_move_to(cr, lx, ly);
+        hex(cr, "4a4d52", 0.75);
+        cairo_show_text(cr, "OUT");
+    }
 
     // scale marks
     cairo_set_line_width(cr, 1);
@@ -530,12 +653,20 @@ static void draw_fader(cairo_t *cr, const skin_state_t *st) {
         cairo_move_to(cr, fader_x + 11, y + 0.5);
         cairo_line_to(cr, fader_x + 11 + w, y + 0.5);
     }
-    hex(cr, "7d8086", 0.8);
+    if (FLAT) {
+        flat_rgb(cr, FLAT_LINE, 1);
+    } else {
+        hex(cr, "7d8086", 0.8);
+    }
     cairo_stroke(cr);
 
     // slot
     rounded_rect(cr, fader_x - 4, fader_top - 3, 8, fader_bottom - fader_top + 6, 4);
-    hex(cr, "1a1b1d", 1);
+    if (FLAT) {
+        flat_rgb(cr, FLAT_BG, 1);
+    } else {
+        hex(cr, "1a1b1d", 1);
+    }
     cairo_fill(cr);
     // the level, unless muted
     if (!st->out_muted && v > 0) {
@@ -546,6 +677,17 @@ static void draw_fader(cairo_t *cr, const skin_state_t *st) {
 
     // cap
     double x = fader_x - fader_cap_w / 2, y = cy - fader_cap_h / 2;
+    if (FLAT) {
+        rounded_rect(cr, x, y, fader_cap_w, fader_cap_h, 4);
+        flat_rgb(cr, hover ? FLAT_FACE_DOWN : FLAT_FACE_UP, 1);
+        cairo_fill(cr);
+        cairo_move_to(cr, x + 6, cy + 0.5);
+        cairo_line_to(cr, x + fader_cap_w - 6, cy + 0.5);
+        flat_rgb(cr, FLAT_TEXT, 1);
+        cairo_stroke(cr);
+        flat_mute(cr, st);
+        return;
+    }
     rounded_rect(cr, x, y + 2, fader_cap_w, fader_cap_h, 4);
     cairo_set_source_rgba(cr, 0, 0, 0, 0.25);
     cairo_fill(cr);
@@ -610,8 +752,13 @@ void skin_draw_controls(cairo_t *cr, const skin_geom_t *g, const skin_state_t *s
         draw_toast(cr, st->toast, st->recording);
     }
     for (int i = 0; i < 3; i++) {
-        draw_key(cr, key_pos[i], st->key_down[i], st->hover == SKIN_K1 + i);
-        draw_knob(cr, enc_pos[i], st->enc_ticks[i], st->hover == SKIN_E1 + i);
+        if (FLAT) {
+            flat_key(cr, key_pos[i], st->key_down[i], st->hover == SKIN_K1 + i);
+            flat_knob(cr, enc_pos[i], st->enc_ticks[i], st->hover == SKIN_E1 + i);
+        } else {
+            draw_key(cr, key_pos[i], st->key_down[i], st->hover == SKIN_K1 + i);
+            draw_knob(cr, enc_pos[i], st->enc_ticks[i], st->hover == SKIN_E1 + i);
+        }
     }
     draw_fader(cr, st);
     cairo_restore(cr);

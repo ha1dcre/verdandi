@@ -6,7 +6,10 @@
 #include <math.h>
 #include <stdio.h>
 
+#include "skin_theme.h"
 #include "vgrid_skin.h"
+
+#define FLAT (skin_style() == SKIN_STYLE_FLAT)
 
 const int vgrid_sizes[4][2] = {{0, 0}, {8, 8}, {16, 8}, {16, 16}};
 
@@ -97,6 +100,12 @@ static void rounded_rect(cairo_t *cr, double x, double y, double w, double h, do
 
 static void draw_plate(cairo_t *cr, const vgrid_geom_t *g) {
     double w = plate_w(g->cols), h = plate_h(g->rows);
+    if (FLAT) {
+        rounded_rect(cr, MARGIN, MARGIN, w, h, 10);
+        flat_rgb(cr, FLAT_BODY, 1);
+        cairo_fill(cr);
+        return;
+    }
     // shadow on the desk
     for (int i = 8; i >= 1; i--) {
         rounded_rect(cr, MARGIN - i * 0.8, MARGIN - i * 0.5 + 4, w + i * 1.6, h + i * 1.6, 10 + i);
@@ -125,6 +134,29 @@ static void draw_plate(cairo_t *cr, const vgrid_geom_t *g) {
 static void draw_keys(cairo_t *cr, const vgrid_geom_t *g, const uint8_t level[VGRID_MAX][VGRID_MAX], int intensity,
                       const uint8_t held[VGRID_MAX][VGRID_MAX]) {
     double scale = (intensity < 0 ? 15 : intensity) / 15.0;
+    if (FLAT) {
+        // a plain square per key, from dark towards amber with its level
+        for (int r = 0; r < g->rows; r++) {
+            for (int c = 0; c < g->cols; c++) {
+                double x = key_x(c), y = key_y(r);
+                double l = level[r][c] / 15.0 * scale;
+                rounded_rect(cr, x, y, KEY, KEY, 4.2);
+                if (l > 0) {
+                    flat_mix(cr, FLAT_FACE, FLAT_ACCENT, l);
+                } else {
+                    flat_rgb(cr, held[r][c] & VGRID_HELD_MOUSE ? FLAT_FACE_DOWN : FLAT_FACE, 1);
+                }
+                cairo_fill(cr);
+                if (held[r][c] & VGRID_HELD_LATCH) {
+                    rounded_rect(cr, x - 3.5, y - 3.5, KEY + 7, KEY + 7, 7);
+                    cairo_set_line_width(cr, 2);
+                    flat_rgb(cr, FLAT_ACCENT, 1);
+                    cairo_stroke(cr);
+                }
+            }
+        }
+        return;
+    }
     // glows first, so neighbouring keys do not cut them off
     for (int r = 0; r < g->rows; r++) {
         for (int c = 0; c < g->cols; c++) {
@@ -194,6 +226,23 @@ static void draw_switch(cairo_t *cr, const vgrid_geom_t *g, int size) {
         double x = switch_x(g, i);
         int on = i == size;
         rounded_rect(cr, x, y, SW_W, SW_H, 6);
+        if (FLAT) {
+            flat_rgb(cr, FLAT_FACE, 1);
+            cairo_fill(cr);
+            double lx = x + 13, ly = y + SW_H / 2;
+            cairo_arc(cr, lx, ly, 3, 0, 2 * M_PI);
+            flat_rgb(cr, on ? FLAT_ACCENT : FLAT_LINE, 1);
+            cairo_fill(cr);
+            cairo_select_font_face(cr, "Helvetica Neue", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+            cairo_set_font_size(cr, 12);
+            cairo_text_extents_t te;
+            cairo_text_extents(cr, labels[i], &te);
+            double area = x + 22, aw = SW_W - 26;
+            cairo_move_to(cr, area + (aw - te.width) / 2 - te.x_bearing, ly - te.height / 2 - te.y_bearing);
+            flat_rgb(cr, on ? FLAT_TEXT : FLAT_SOFT, 1);
+            cairo_show_text(cr, labels[i]);
+            continue;
+        }
         cairo_pattern_t *p = cairo_pattern_create_linear(0, y, 0, y + SW_H);
         cairo_pattern_add_color_stop_rgb(p, 0, 0.24, 0.25, 0.26);
         cairo_pattern_add_color_stop_rgb(p, 1, 0.14, 0.14, 0.15);
@@ -237,7 +286,11 @@ void vgrid_skin_draw(cairo_t *cr, const vgrid_geom_t *g, int w, int h,
                      const uint8_t level[VGRID_MAX][VGRID_MAX], int intensity,
                      const uint8_t held[VGRID_MAX][VGRID_MAX], int size) {
     cairo_save(cr);
-    cairo_set_source_rgb(cr, 0.10, 0.10, 0.11);
+    if (FLAT) {
+        flat_rgb(cr, FLAT_BG, 1);
+    } else {
+        cairo_set_source_rgb(cr, 0.10, 0.10, 0.11);
+    }
     cairo_rectangle(cr, 0, 0, w, h);
     cairo_fill(cr);
     cairo_translate(cr, g->ox, g->oy);

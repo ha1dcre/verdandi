@@ -5,7 +5,10 @@
 
 #include <math.h>
 
+#include "skin_theme.h"
 #include "varc_skin.h"
+
+#define FLAT (skin_style() == SKIN_STYLE_FLAT)
 
 #define MARGIN 18.0
 #define EDGE 30.0
@@ -73,6 +76,12 @@ static void rounded_rect(cairo_t *cr, double x, double y, double w, double h, do
 
 static void draw_plate(cairo_t *cr, int rings) {
     double w = plate_w(rings), h = plate_h();
+    if (FLAT) {
+        rounded_rect(cr, MARGIN, MARGIN, w, h, 14);
+        flat_rgb(cr, FLAT_BODY, 1);
+        cairo_fill(cr);
+        return;
+    }
     for (int i = 8; i >= 1; i--) {
         rounded_rect(cr, MARGIN - i * 0.8, MARGIN - i * 0.5 + 4, w + i * 1.6, h + i * 1.6, 14 + i);
         cairo_set_source_rgba(cr, 0, 0, 0, 0.05);
@@ -98,6 +107,15 @@ static void draw_plate(cairo_t *cr, int rings) {
 
 static void draw_ring(cairo_t *cr, int n, const uint8_t *leds, double scale) {
     double cx = ring_x(n), cy = ring_y();
+    if (FLAT) {
+        for (int x = 0; x < VARC_LEDS; x++) {
+            double t = -M_PI / 2 + x * 2 * M_PI / VARC_LEDS;
+            cairo_arc(cr, cx + cos(t) * RING_R, cy + sin(t) * RING_R, LED_R, 0, 2 * M_PI);
+            flat_mix(cr, FLAT_LINE, FLAT_ACCENT, leds[x] / 15.0 * scale);
+            cairo_fill(cr);
+        }
+        return;
+    }
     // glows first, so the holes next to a lit led do not cut them off
     for (int x = 0; x < VARC_LEDS; x++) {
         double l = leds[x] / 15.0 * scale;
@@ -133,6 +151,17 @@ static void draw_ring(cairo_t *cr, int n, const uint8_t *leds, double scale) {
 static void draw_knob(cairo_t *cr, int n, double turns, int down) {
     double cx = ring_x(n), cy = ring_y() + (down ? 1.2 : 0);
     double r = KNOB_R, top = KNOB_R - 8;
+    if (FLAT) {
+        // a plain disc, a dot turning with it
+        cairo_arc(cr, cx, cy, r, 0, 2 * M_PI);
+        flat_rgb(cr, down ? FLAT_FACE_DOWN : FLAT_FACE, 1);
+        cairo_fill(cr);
+        double t = -M_PI / 2 + turns * 2 * M_PI;
+        cairo_arc(cr, cx + cos(t) * (r - 12), cy + sin(t) * (r - 12), 4, 0, 2 * M_PI);
+        flat_rgb(cr, FLAT_TEXT, 1);
+        cairo_fill(cr);
+        return;
+    }
     // shadow on the plate
     cairo_arc(cr, cx + 3, cy + 6, r + 1, 0, 2 * M_PI);
     cairo_set_source_rgba(cr, 0, 0, 0, 0.22);
@@ -178,7 +207,11 @@ void varc_skin_draw(cairo_t *cr, const varc_geom_t *g, int w, int h,
                     const uint8_t ring[VARC_RINGS][VARC_LEDS], int intensity, const double angle[VARC_RINGS],
                     int pressed) {
     cairo_save(cr);
-    cairo_set_source_rgb(cr, 0.10, 0.10, 0.11);
+    if (FLAT) {
+        flat_rgb(cr, FLAT_BG, 1);
+    } else {
+        cairo_set_source_rgb(cr, 0.10, 0.10, 0.11);
+    }
     cairo_rectangle(cr, 0, 0, w, h);
     cairo_fill(cr);
     cairo_translate(cr, g->ox, g->oy);

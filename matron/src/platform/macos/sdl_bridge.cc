@@ -70,6 +70,7 @@
 #include "open_url.h"
 #include "product.h"
 #include "sdl_bridge.h"
+#include "skin_theme.h"
 #include "varc_skin.h"
 #include "vgrid_device.h"
 #include "vgrid_skin.h"
@@ -1677,6 +1678,21 @@ static void show_in_finder(const std::string &dir) {
     macos_open_url(dir.c_str());
 }
 
+// View: the look of every window, from now on and at the next start
+static void set_skin(int style) {
+    mac_menu_set_skin(style == SKIN_STYLE_FLAT ? MAC_SKIN_FLAT : MAC_SKIN_DEVICE);
+    if (skin_style() == style) {
+        return;
+    }
+    skin_set_style(style);
+    // the box is drawn once per size: draw it again
+    free_layers();
+    redraw(true);
+    grid_redraw();
+    arc_redraw();
+    keys_redraw();
+}
+
 static void menu_item(int id) {
     switch (id) {
     case MAC_MENU_DUST:
@@ -1700,6 +1716,10 @@ static void menu_item(int id) {
         break;
     case MAC_MENU_KEYS:
         toggle_keys();
+        break;
+    case MAC_MENU_SKIN_DEVICE:
+    case MAC_MENU_SKIN_FLAT:
+        set_skin(id == MAC_MENU_SKIN_FLAT ? SKIN_STYLE_FLAT : SKIN_STYLE_DEVICE);
         break;
     default:
         break;
@@ -2049,6 +2069,7 @@ void sdl_bridge_init(void) {
     device_event_type = bridge_event_type + 2;
     toast_event_type = bridge_event_type + 3;
     SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
+    skin_set_style(mac_menu_saved_skin() == MAC_SKIN_FLAT ? SKIN_STYLE_FLAT : SKIN_STYLE_DEVICE);
     mac_menu_install(menu_item, import_path, note_toast, input_chosen);
     mac_update_install();
 }

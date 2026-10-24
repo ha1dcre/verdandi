@@ -171,6 +171,7 @@ def build(bld):
             '../matron/src/platform/macos/mac_update.m',
             '../matron/src/platform/macos/open_url.c',
             '../matron/src/platform/macos/sdl_bridge.cc',
+            '../matron/src/platform/macos/skin_theme.c',
             '../matron/src/platform/macos/stat_macos.cc',
             '../matron/src/platform/macos/varc_skin.c',
             '../matron/src/platform/macos/vgrid_device.c',

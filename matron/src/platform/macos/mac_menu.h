@@ -26,6 +26,14 @@ enum {
     MAC_MENU_GRID,
     MAC_MENU_ARC,
     MAC_MENU_KEYS,
+    MAC_MENU_SKIN_DEVICE, // View: the windows drawn as the hardware
+    MAC_MENU_SKIN_FLAT,   // View: dark flat
+};
+
+// the look checked in View (SKIN_STYLE_*)
+enum {
+    MAC_SKIN_DEVICE = 0,
+    MAC_SKIN_FLAT = 1,
 };
 
 // how the import callback takes a path
@@ -58,6 +66,12 @@ extern void mac_menu_set_input(int input);
 // the app's name in the menu bar and its menu (About, Hide, Quit ...): the binary is norns, the
 // app is not. before SDL_Init
 extern void mac_set_app_name(const char *name);
+
+// the look (MAC_SKIN_*) chosen last time, device if never; before mac_menu_install
+extern int mac_menu_saved_skin(void);
+
+// check this look in View and keep it for the next start
+extern void mac_menu_set_skin(int skin);
 
 // the GIF item says "Stop" while recording
 extern void mac_menu_set_recording(int on);
