@@ -190,7 +190,7 @@ int main(int argc, char **argv) {
         NSString *tone_exe = make_tone_app(dir, argv[0]);
         NSDictionary *env = @{@"JACK_DEFAULT_SERVER" : @SERVER};
 
-        NSTask *jackd = start(@"/opt/homebrew/bin/jackd", @[ @"-n", @SERVER, @"-d", @"dummy", @"-r", @"48000", @"-p", @"256" ], @{});
+        NSTask *jackd = start([NSFileManager.defaultManager isExecutableFileAtPath:@"/opt/homebrew/bin/jackd"] ? @"/opt/homebrew/bin/jackd" : @"/usr/local/bin/jackd", @[ @"-n", @SERVER, @"-d", @"dummy", @"-r", @"48000", @"-p", @"256" ], @{});
         setenv("JACK_DEFAULT_SERVER", SERVER, 1);
         jack_client_t *c = NULL;
         for (int i = 0; i < 50 && c == NULL; i++) {

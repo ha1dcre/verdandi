@@ -138,7 +138,8 @@ def configure_macos(conf):
         while d != os.path.dirname(d) and not os.path.isdir(os.path.join(d, 'deps', 'prefix')):
             d = os.path.dirname(d)
         deps = os.path.join(d, 'deps', 'prefix')
-    brew = os.environ.get('HOMEBREW_PREFIX', '/opt/homebrew')
+    brew = os.environ.get('HOMEBREW_PREFIX',
+                          '/opt/homebrew' if os.uname().machine == 'arm64' else '/usr/local')
     pkg = [os.path.join(deps, 'lib', 'pkgconfig'), os.path.join(brew, 'lib', 'pkgconfig')]
     if os.environ.get('PKG_CONFIG_PATH'):
         pkg.append(os.environ['PKG_CONFIG_PATH'])

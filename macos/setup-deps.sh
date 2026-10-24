@@ -15,7 +15,8 @@ NORNS_HOME="$(dirname "$REPO")"
 DEPS="${1:-$(cd "$NORNS_HOME/../.." && pwd)/deps}"
 P="$DEPS/prefix"
 SRC="$DEPS/src"
-BREW="${HOMEBREW_PREFIX:-/opt/homebrew}"
+if [ "$(uname -m)" = arm64 ]; then BREW_DEFAULT=/opt/homebrew; else BREW_DEFAULT=/usr/local; fi
+BREW="${HOMEBREW_PREFIX:-$BREW_DEFAULT}"
 J=$(sysctl -n hw.ncpu)
 
 JACK_VERSION=1.9.22
@@ -155,7 +156,7 @@ if [ ! -x "$SC_APP/MacOS/sclang" ]; then
     # bundled copies would be compiled against the wrong headers
     cmake -S supercollider -B supercollider/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$P" \
         -DAUDIOAPI=jack -DSC_QT=OFF -DSC_IDE=OFF -DSUPERNOVA=OFF -DSC_EL=OFF -DSC_VIM=OFF -DSC_ED=OFF \
-        -DNO_X11=ON -DSC_ABLETON_LINK=OFF -DINSTALL_HELP=OFF -DENABLE_TESTSUITE=OFF \
+        -DNO_X11=ON -DNATIVE=OFF -DSC_ABLETON_LINK=OFF -DINSTALL_HELP=OFF -DENABLE_TESTSUITE=OFF \
         -DSYSTEM_BOOST=ON -DSYSTEM_YAMLCPP=ON -DCMAKE_PREFIX_PATH="$BREW;$BREW/opt/readline" \
         -DCMAKE_C_FLAGS="$MAP" -DCMAKE_CXX_FLAGS="$MAP"
     cmake --build supercollider/build -j "$J"
@@ -189,7 +190,8 @@ M="$NORNS_HOME/maiden"
 if [ ! -x "$M/maiden" ]; then
     cd "$SRC"
     if [ ! -x node16/bin/node ]; then
-        F="node-$NODE_VERSION-darwin-arm64.tar.gz"
+        case "$(uname -m)" in arm64) NODE_ARCH=arm64 ;; *) NODE_ARCH=x64 ;; esac
+        F="node-$NODE_VERSION-darwin-$NODE_ARCH.tar.gz"
         curl -sSfLO "https://nodejs.org/dist/$NODE_VERSION/$F"
         curl -sSfL "https://nodejs.org/dist/$NODE_VERSION/SHASUMS256.txt" | grep " $F\$" | shasum -a 256 -c -
         mkdir -p node16 && tar xzf "$F" -C node16 --strip-components 1 && rm "$F"

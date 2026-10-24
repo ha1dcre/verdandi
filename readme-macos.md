@@ -211,3 +211,11 @@ see `matron/src/platform/macos/` and `macos/`:
 - no pi hardware: oled, gpio keys/encoders, battery, i2c are stubbed; stat via mach
 - GNU coreutils/findutils/sed/grep are first on norns' PATH, as scripts expect GNU tools
 - lua is built as C (C modules from scripts need the C symbols)
+
+## Intel Macs
+
+The same scripts build on an Intel Mac (x86_64): Homebrew's prefix (`/usr/local`), the
+Homebrew bottle tags (`sequoia` instead of `arm64_sequoia`) and maiden's Node download follow
+`uname -m`. Set `HOMEBREW_PREFIX` or `NORNS_ARCH` to override. Nothing is compiled with
+`-march=native`, so a build runs on older CPUs too (tested target: Ivy Bridge, mid-2012
+MacBook on macOS 15). Build on the Intel Mac itself, natively, not under Rosetta.

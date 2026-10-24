@@ -231,6 +231,10 @@ def fetch_web(deps, src, tmp):
     # caches in the temporary folder: tens of thousands of files, not for the project folder
     env = dict(os.environ, npm_config_cache=os.path.join(tmp, 'npm'), YARN_CACHE_FOLDER=os.path.join(tmp, 'yarn'),
                npm_config_update_notifier='false')
+    # npx from the node setup-deps.sh fetched for maiden (no system node needed)
+    node = os.path.join(deps, 'src', 'node16', 'bin')
+    if os.path.isdir(node):
+        env['PATH'] = node + os.pathsep + env.get('PATH', '')
     subprocess.run(['npx', '-y', 'yarn@1.22.22', 'install', '--frozen-lockfile', '--ignore-scripts', '--ignore-engines',
                     '--production', '--non-interactive', '--silent'], cwd=web, check=True, env=env,
                    stdout=subprocess.DEVNULL)
