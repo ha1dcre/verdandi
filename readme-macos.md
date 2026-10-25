@@ -49,7 +49,7 @@ launcher (`macos/app-launcher.sh`) uses `~/norns` as the norns home.
 the version is `CFBundleShortVersionString` in `macos/make-app.sh` (and `macos/auv3/build-appex.sh`).
 the app compares it with the latest GitHub release (`matron/src/platform/macos/mac_update.m`, at
 start and once a day; the launcher passes the app's path as `VERDANDI_APP`), so a release's tag
-must be that version (`v0.1.3`) and must not be a pre-release: `/releases/latest` skips those.
+must be that version (`v0.1.4`) and must not be a pre-release: `/releases/latest` skips those.
 
 the AUv3 (`macos/auv3/`, "Verdandi", type `aumf`, subtype `vrdn`, manufacturer `Vrdn`) is a sandboxed
 extension inside the app. it sends the DAW's audio and MIDI over UDP on 127.0.0.1 to
