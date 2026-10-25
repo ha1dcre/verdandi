@@ -156,7 +156,10 @@ union request {
     struct request_detach detach;
 };
 
-static moodycamel::BlockingConcurrentQueue<union request *> requests(32);
+// never destroyed: matron_cleanup() ends in exit() while the client thread still waits on
+// the queue, and a static destructor would free it under that thread (crash on quit)
+static moodycamel::BlockingConcurrentQueue<union request *> &requests =
+    *new moodycamel::BlockingConcurrentQueue<union request *>(32);
 
 static union request *request_new(request_type_t type) {
     union request *req = (request *)REQUEST_CALLOC(1, sizeof(union request));
