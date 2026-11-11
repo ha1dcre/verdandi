@@ -108,6 +108,7 @@ cat > "$APP/Contents/Info.plist" <<EOF
     <key>LSUIElement</key><true/>
     <key>NSMicrophoneUsageDescription</key><string>Verdandi runs norns: its scripts record and process the audio input (softcut, tape, engines).</string>
     <key>NSAudioCaptureUsageDescription</key><string>SYS on the MIC button (or Devices &gt; Audio Input) plays other apps' sound into the input of norns.</string>
+    <key>NSLocalNetworkUsageDescription</key><string>Ableton Link: CLOCK source link syncs norns' tempo with Live and other Link apps on this Mac and your network.</string>
     <key>NSHumanReadableCopyright</key><string>GPL-3.0. community port, not affiliated with monome.</string>
 </dict>
 </plist>
@@ -132,7 +133,11 @@ echo "== AUv3"
 mkdir -p "$APP/Contents/PlugIns"
 "$REPO/macos/auv3/build-appex.sh" "$APP/Contents/PlugIns/Verdandi.appex" "$VERSION"
 
+# AppleDouble files (._*) from exFAT sources: copies and disk images drop them, which
+# breaks the signature on every other Mac (0.1.6: maiden/.../._manual.html)
+find "$APP" -name '._*' -delete
 codesign --force --sign - "$APP"
+codesign --verify --deep --strict "$APP"
 
 echo "== check: nothing may point outside the app"
 bad=0
@@ -182,6 +187,13 @@ PY
     xattr -c "$STAGE"/Manual.* 2>/dev/null
     hdiutil create -volname Verdandi -srcfolder "$STAGE" -fs HFS+ -format UDZO -imagekey zlib-level=9 -ov "$OUT/Verdandi.dmg" >/dev/null
     rm -rf "$STAGE"
+    # the app as a downloader gets it: signed and complete inside the mounted image
+    MNT="$(mktemp -d)"
+    hdiutil attach -nobrowse -readonly -mountpoint "$MNT" "$OUT/Verdandi.dmg" >/dev/null
+    ok=0; codesign --verify --deep --strict "$MNT/Verdandi.app" && ok=1
+    hdiutil detach "$MNT" >/dev/null; rmdir "$MNT"
+    [ $ok -eq 1 ] || { echo "  the app in the dmg fails its signature check"; exit 1; }
+    echo "  signature in the dmg: ok"
     mkdir -p "$DIST"
     cp "$OUT/Verdandi.dmg" "$DIST/Verdandi.dmg"
     ls -la "$DIST/Verdandi.dmg"
