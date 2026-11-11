@@ -101,7 +101,7 @@ cat > "$APP/Contents/Info.plist" <<EOF
     <key>CFBundleIdentifier</key><string>community.verdandi.app</string>
     <key>CFBundleExecutable</key><string>Verdandi</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>0.1.4</string>
+    <key>CFBundleShortVersionString</key><string>0.1.5</string>
     <key>CFBundleVersion</key><string>$VERSION</string>
     <key>LSMinimumSystemVersion</key><string>$MIN</string>
     <key>LSUIElement</key><true/>
@@ -168,6 +168,7 @@ if [ "${1:-}" = "--dmg" ]; then
     ln -s /Applications "$STAGE/Applications"
     [ -f "$REPO/macos/manual/norns-macos-manual.pdf" ] && cp "$REPO/macos/manual/norns-macos-manual.pdf" "$STAGE/Manual.pdf"
     [ -f "$REPO/macos/manual/manual.html" ] && cp "$REPO/macos/manual/manual.html" "$STAGE/Manual.html"
+    [ -f "$REPO/macos/manual/script-builder-manual.pdf" ] && cp "$REPO/macos/manual/script-builder-manual.pdf" "$STAGE/Script Builder Manual.pdf"
     chmod 644 "$STAGE"/Manual.* 2>/dev/null
     xattr -c "$STAGE"/Manual.* 2>/dev/null
     hdiutil create -volname Verdandi -srcfolder "$STAGE" -fs HFS+ -format UDZO -imagekey zlib-level=9 -ov "$OUT/Verdandi.dmg" >/dev/null
