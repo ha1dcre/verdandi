@@ -1,6 +1,7 @@
 // mix.js: the final video: full.mp4 (record.js --full) with the narration laid in, each paragraph
 // 0.4 s after the start of its scene; Verdandi's sound (the tape) evened out and ducked under
-// the voice; loudness -16 LUFS.
+// the voice; loudness -16 LUFS. (the duck's key is padded with silence: it ended with the last
+// paragraph and cut the sound after it)
 //   node macos/manual/video/mix.js <out dir> <voice file> <voice-segments.json>
 // voice-segments.json: {"segments": [[start, end] ...] in the voice file, "scenes": [scene names]}
 'use strict';
@@ -23,7 +24,7 @@ seg.segments.forEach(([a, b], i) => {
   labels += '[v' + i + ']';
   console.log('paragraph ' + (i + 1) + ' (' + seg.scenes[i] + '): ' + start.toFixed(2) + ' - ' + last.toFixed(2) + ' s');
 });
-const filter = parts + labels + 'amix=inputs=' + seg.segments.length + ':normalize=0,aformat=channel_layouts=stereo,loudnorm=I=-16:TP=-2:LRA=7,asplit=2[voice][key];' +
+const filter = parts + labels + 'amix=inputs=' + seg.segments.length + ':normalize=0,aformat=channel_layouts=stereo,loudnorm=I=-16:TP=-2:LRA=7,asplit=2[voice][k];[k]apad[key];' +
   '[0:a]aformat=channel_layouts=stereo,loudnorm=I=-20:TP=-3:LRA=11[bed];' +
   '[bed][key]sidechaincompress=threshold=0.03:ratio=5:attack=30:release=500[ducked];' +
   '[ducked][voice]amix=inputs=2:normalize=0,alimiter=limit=0.9,apad[mix]';
