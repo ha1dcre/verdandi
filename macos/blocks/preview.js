@@ -12,6 +12,7 @@
   class NornsScreen {
     constructor(canvas) {
       this.out = canvas.getContext('2d');
+      this.more = [];
       this.buf = document.createElement('canvas');
       this.buf.width = 128;
       this.buf.height = 64;
@@ -44,7 +45,16 @@
       g.restore();
       g.beginPath();
     }
-    update() { this.out.drawImage(this.buf, 0, 0); }
+    update() {
+      this.out.drawImage(this.buf, 0, 0);
+      for (const o of this.more) o.drawImage(this.buf, 0, 0, o.canvas.width, o.canvas.height);
+    }
+    // another canvas that shows the same screen (any size: drawn pixel for pixel, scaled up)
+    addOutput(canvas) {
+      const o = canvas.getContext('2d');
+      o.imageSmoothingEnabled = false;
+      this.more.push(o);
+    }
     level(l) { this.lvl = Math.floor(Number(l) || 0); }
     line_width(w) { this.g.lineWidth = Number(w) || 1; }
     line_cap(c) { this.g.lineCap = String(c); }
@@ -189,6 +199,8 @@
     key(n, z) { this.call('_preview_key', n, z); }
     enc(n, d) { this.call('_preview_enc', n, d); }
     grid(x, y, z) { this.call('_preview_grid_key', x, y, z); }
+    testNote() { this.call('_preview_test_note'); }
+    addOutput(canvas) { this.screen.addOutput(canvas); }
   }
 
   root.VerdandiPreview = Preview;

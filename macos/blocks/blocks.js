@@ -428,7 +428,10 @@
         out.push(I + 'clock.run(function()', I + I + 'while true do', I + I + I + 'clock.sync(' + l.div + ')',
           indent(l.body, 2).replace(/\n$/, ''), I + I + 'end', I + 'end)');
       }
-      if (s.redraw.length) {
+      // what kits draw before the blocks do (the screen design): a redraw even without "draw the screen"
+      const redrawFirst = [].concat(...KITS.map(k => k.redrawFirst ? k.redrawFirst(s, I) : []));
+      const drawing = s.redraw.length > 0 || redrawFirst.length > 0;
+      if (drawing) {
         out.push(I + 'clock.run(function()', I + I + 'while true do', I + I + I + 'clock.sleep(1 / 15)');
         if (s.uses.has('frame')) out.push(I + I + I + '_blk_frame = _blk_frame + 1');
         out.push(I + I + I + 'redraw()', I + I + 'end', I + 'end)');
@@ -451,8 +454,8 @@
         }
         out.push('end', '');
       }
-      if (s.redraw.length) {
-        out.push('function redraw()', I + 'screen.clear()');
+      if (drawing) {
+        out.push('function redraw()', I + 'screen.clear()', ...redrawFirst);
         for (const r of s.redraw) if (r) out.push(lines(r));
         out.push(I + 'screen.update()', 'end', '');
       }

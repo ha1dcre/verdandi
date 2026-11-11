@@ -18,9 +18,9 @@ B="$APP/blocks"
 
 rm -rf "$B"
 mkdir -p "$B/vendor/blockly/msg" "$B/vendor/fengari" "$B/lib"
-# the page: everything in macos/blocks but the patcher's dev page
+# the page: everything in macos/blocks but the editors' dev pages
 for f in "$REPO"/macos/blocks/*; do
-    case "$(basename "$f")" in patcher-dev.html) ;; *) cp "$f" "$B/" ;; esac
+    case "$(basename "$f")" in *-dev.html) ;; *) cp "$f" "$B/" ;; esac
 done
 cp "$BLOCKLY"/{blockly_compressed.js,blocks_compressed.js,lua_compressed.js,LICENSE} "$B/vendor/blockly/"
 cp "$BLOCKLY/msg/en.js" "$B/vendor/blockly/msg/"

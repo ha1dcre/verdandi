@@ -57,6 +57,17 @@
       {text: 'Make something move: put <b>frame number</b> or <b>beats since start</b> (Screen) into a size or a position. <b>remainder of</b> and <b>sin</b> (Math) make it go round.',
        category: 'Screen', check: h => h.has('nv_frame') || h.has('nv_beats')},
     ]},
+    {title: 'Make it move: the screen page', steps: [
+      {text: 'Switch to <b>screen</b> at the top. Here you put things on the norns screen and make them move, without blocks: the big screen shows what the norns will show.',
+       view: 'screen', check: h => h.view === 'screen'},
+      {text: 'Add <b>rings on notes</b> (moving). Every note your script plays sends a ring out. Press <b>test note</b> to see one without playing.',
+       view: 'screen', check: h => h.layer('rings')},
+      {text: 'Add a <b>text</b>, then set its <b>brightness</b> to move <b>with the beat</b>: it now breathes in time. Try <code>{note}</code> or <code>{tempo}</code> in the text.',
+       view: 'screen', check: h => h.animated('text', 'beat')},
+      {text: 'Add a <b>meter</b> (values): it moves <b>with the sound level</b> already. Drag things around on the big screen, and resize them by their corners.',
+       view: 'screen', check: h => h.layer('bar')},
+      {text: 'Any number can move: with the beat, over time, on each note, with the sound level, with a control or a looper. Blocks (Screen) can change pages, hide elements and set values, too.'},
+    ]},
     {title: 'A looper', steps: [
       {text: 'From <b>Looper</b>, put <b>set up looper 1</b> into <b>when the script starts</b>. It records the audio input (or the sound, or both).',
        category: 'Looper', check: h => h.inside('nv_looper_setup', 'nv_init')},
@@ -117,6 +128,7 @@
       const blocks = ws.getAllBlocks(false).filter(b => b.isEnabled());
       const within = (b, parent) => { let p = b.getSurroundParent(); while (p) { if (p.type === parent) return true; p = p.getSurroundParent(); } return false; };
       const patch = this.ctx.getPatch() || {modules: [], cables: []};
+      const design = (this.ctx.getDesign && this.ctx.getDesign()) || {layers: []};
       const typeOf = ref => { const m = (patch.modules || []).find(x => x.id === String(ref).split('.')[0]); return m ? m.type : null; };
       return {
         flags: this.flags,
@@ -128,6 +140,9 @@
           const types = (patch.modules || []).map(m => m.type).sort().join(',');
           return types !== 'env,filter,osc,out,vca,voice';
         },
+        layer: type => (design.layers || []).some(l => l.type === type),
+        animated: (type, kind) => (design.layers || []).some(l => l.type === type &&
+          Object.values(l.props || {}).some(p => p && p.anim && p.anim.kind === kind)),
         cable: (from, to, jack) => (patch.cables || []).some(c => typeOf(c.from) === from && typeOf(c.to) === to && c.to.endsWith('.' + jack)),
       };
     }

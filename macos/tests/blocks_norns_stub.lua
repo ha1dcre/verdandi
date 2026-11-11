@@ -126,8 +126,8 @@ clock = {
 }
 
 poll = {set = function(name, f)
-  assert(name == "voices", "poll " .. tostring(name))
-  return {start = function() log("poll.start", name); f(2) end, time = 0}
+  assert(name == "voices" or name == "amp_out_l", "poll " .. tostring(name))
+  return {start = function() log("poll.start", name); f(name == "voices" and 2 or 0.2) end, time = 0}
 end}
 
 local mdev = device("midi", {note_on = 1, note_off = 1, cc = 1})

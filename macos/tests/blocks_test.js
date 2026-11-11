@@ -25,12 +25,16 @@ require(path.join(blocklyDir, 'blocks_compressed.js'));
 const lua = require(path.join(blocklyDir, 'lua_compressed.js'));
 Blockly.setLocale(require(path.join(blocklyDir, 'msg', 'en.js')));
 const VB = require(path.join(repo, 'macos', 'blocks', 'blocks.js'));
-for (const k of ['sound', 'looper', 'seq', 'grid', 'ui']) require(path.join(repo, 'macos', 'blocks', 'blocks_' + k + '.js'))(VB);
+for (const k of ['sound', 'looper', 'seq', 'grid', 'ui', 'screen']) require(path.join(repo, 'macos', 'blocks', 'blocks_' + k + '.js'))(VB);
 const weave = require(path.join(repo, 'macos', 'blocks', 'weave.js'));
 const catalog = JSON.parse(fs.readFileSync(path.join(repo, 'macos', 'blocks', 'weave.json')));
-// the sound page of the document being generated
+const screen = require(path.join(repo, 'macos', 'blocks', 'screen.js'));
+const screenCatalog = JSON.parse(fs.readFileSync(path.join(repo, 'macos', 'blocks', 'screen.json')));
+// the sound page and screen page of the document being generated
 let patch = weave.DEFAULT_PATCH;
-const api = VB.register(Blockly, lua, {getPatch: () => patch, weave, catalog});
+let design = {layers: []};
+const api = VB.register(Blockly, lua, {getPatch: () => patch, weave, catalog,
+  getDesign: () => design, screen, screenCatalog});
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'blocks-test-'));
 let failed = 0;
@@ -39,8 +43,9 @@ function check(name, ok, detail) {
   if (!ok) failed++;
 }
 
-function generate(json, name, docPatch) {
+function generate(json, name, docPatch, docDesign) {
   patch = docPatch || weave.DEFAULT_PATCH;
+  design = docDesign || {layers: []};
   const ws = new Blockly.Workspace();
   Blockly.serialization.workspaces.load(json, ws);
   const code = api.generate(ws, name);
@@ -136,6 +141,59 @@ function run(name, code) {
     out.slice(out.indexOf('-- grid'), out.indexOf('-- grid') + 4).join(' | '));
   check('grid keys: the grid is drawn, C keys lit', /grid\.all 0[\s\S]*grid\.led 8 8 5[\s\S]*grid\.refresh/.test(all),
     out.filter(l => l.startsWith('grid.led')).slice(0, 5).join(', '));
+}
+
+// 1d. the screen page: every element, every way a value moves, live text, the blocks that steer it
+{
+  const layers = screenCatalog.elements.map((e, i) => ({id: e.type + '1', type: e.type, props: {}}));
+  const kinds = screenCatalog.animations.map(a => a.kind);
+  // the text moves one prop per kind of animation, and shows every placeholder
+  const text = layers.find(l => l.type === 'text');
+  text.props = {text: {v: '{tempo} {note} {beat} {page} {cutoff} {step} {nothing}'},
+    x: {v: 4, anim: {kind: 'beat', beats: 4, shape: 'random', from: 0, to: 20}},
+    y: {v: 12, anim: {kind: 'time', seconds: 2, shape: 'triangle', from: 10, to: 20}},
+    size: {v: 8, anim: {kind: 'note', decay: 0.5, from: 8, to: 16}},
+    level: {v: 15, anim: {kind: 'level', from: 2, to: 15}}};
+  layers.find(l => l.type === 'circle').props = {r: {v: 10, anim: {kind: 'control', control: 'cutoff', from: 2, to: 30}}};
+  layers.find(l => l.type === 'arc').props = {to: {v: 0.5, anim: {kind: 'looper', looper: 1, from: 0, to: 1}}, page: {v: 2}};
+  layers.find(l => l.type === 'rect').hidden = true;
+  layers.push({id: 'ghost1', type: 'no_such_element', props: {}});
+  const doc = {variables: [{name: 'step', id: 'v_step'}], blocks: {languageVersion: 0, blocks: [
+    {type: 'nv_init', inputs: {DO: {block: {type: 'nv_param_add', fields: {NAME: 'cutoff', MIN: 0, MAX: 100, DEFAULT: 50},
+      next: {block: {type: 'nv_looper_setup', fields: {N: '1', MAX: 30, SRC: 'in'},
+        next: {block: {type: 'nv_design_page', inputs: {PAGE: {block: {type: 'math_number', fields: {NUM: 2}}}}}}}}}}}},
+    {type: 'nv_every', fields: {DIV: '1/4'}, inputs: {DO: {block: {type: 'nv_counter', fields: {VAR: {id: 'v_step'}},
+      inputs: {N: {block: {type: 'math_number', fields: {NUM: 16}}}},
+      next: {block: {type: 'nv_play_note', inputs: {NOTE: {block: {type: 'math_number', fields: {NUM: 62}}},
+        VEL: {block: {type: 'math_number', fields: {NUM: 100}}}, LEN: {block: {type: 'math_number', fields: {NUM: 0.5}}}}}}}}}},
+    {type: 'nv_key', fields: {KEY: '2', STATE: '1'}, inputs: {DO: {block: {type: 'nv_design_set', fields: {ID: 'orbit1', PROP: 'r'},
+      inputs: {VALUE: {block: {type: 'math_number', fields: {NUM: 7}}}},
+      next: {block: {type: 'nv_design_show', fields: {SHOW: 'hide', ID: 'noise1'},
+        next: {block: {type: 'nv_design_note'}}}}}}}},
+  ]}};
+  const code = generate(doc, 'design', null, {layers});
+  const out = run('design', code);
+  const all = out.join('\n');
+  check('design: runs to the end, every element drawn', out.includes('-- ok'), out.slice(-6).join('\n'));
+  const redraws = all.split('-- redraw')[1] || '';
+  // (norns names note 60 C3: 62 is D3)
+  check('design: the text shows its live values', /screen\.text 120 D3 \d 2 50 \d+ \{nothing\}/.test(all),
+    out.filter(l => l.startsWith('screen.text')).slice(0, 3).join(' | '));
+  check('design: a hidden layer and an unknown one are left out', !/_blk_vis\.draw\.rect\(/.test(code) && !/ghost1/.test(code));
+  check('design: the arc is only on page 2, and page 2 is shown', /_blk_vis\.show\("arc1", 2\)/.test(code) && /_blk_vis\.page = math\.floor\(2\)/.test(code) && /screen\.arc/.test(redraws));
+  check('design: notes make rings and sparks', /_blk_vis\.note_on\(musicutil\.freq_to_note_num\(hz\), vel\)/.test(code) &&
+    /screen\.circle 64 32 [\d.]+\nscreen\.stroke/.test(redraws), out.filter(l => l.startsWith('screen.circle 64 32')).slice(0, 4).join(', '));
+  check('design: the sound level is listened to', /poll\.start amp_out_l/.test(all));
+  check('design: K2 sets the orbit radius and hides the snow', /_blk_vis\.set\("orbit1", "r", 7\)/.test(code) && /_blk_vis\.hide\["noise1"\] = true/.test(code));
+  check('design: dial and slider draw their control', /screen\.text_center cutoff/.test(redraws));
+  // a design alone, no blocks at all, still draws
+  const alone = run('design_alone', generate({blocks: {languageVersion: 0, blocks: []}}, 'alone', null, {layers: [{id: 'orbit1', type: 'orbit', props: {}}]}));
+  // the example of the screen page
+  const vis = JSON.parse(fs.readFileSync(path.join(repo, 'macos', 'blocks', 'visuals.json')));
+  const vout = run('visuals', generate(vis.workspace, vis.name, vis.patch, vis.design));
+  check('visuals: runs, draws stars, orbit, rings, its note name', vout.includes('-- ok') && vout.some(l => l.startsWith('screen.circle 64 28')) &&
+    vout.some(l => /^screen\.text_center [A-G]#?\d$/.test(l)), vout.filter(l => /text_center|circle 64 28/.test(l)).slice(0, 4).join(' | '));
+  check('design: a design without blocks still draws', alone.includes('-- ok') && alone.some(l => l.startsWith('screen.circle')), alone.slice(-4).join(' | '));
 }
 
 // 2. every norns block, each where it belongs, with an input in every slot

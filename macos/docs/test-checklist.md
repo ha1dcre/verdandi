@@ -36,6 +36,10 @@ does not, send the logs: `~/norns/norns.log`, `sclang.log`, `jackd.log`, `auv3_b
 - [ ] open > looper: K2 records the input, K3 finishes the loop, K2 overdubs, E3 changes speed
       (also backwards); the waveform and playhead follow
 - [ ] open > grid_keys with the virtual grid (or a grid): keys play and light up
+- [ ] screen page: add elements, drag and resize them on the big screen; make a value move with
+      the beat, on each note (test note), with the sound level; the big screen and the small
+      preview show the same; run: the norns screen in Verdandi looks the same
+- [ ] open > visuals: stars, rings, sparks and the note name move with every note, the wave with the sound
 - [ ] guide: lesson 1 from an empty workspace to a note heard in Verdandi; "show me" opens the
       right category; a step done moves on by itself
 - [ ] load sample: a wav in dust/audio into slot 1, the sampler preset plays it at the pitch of the notes

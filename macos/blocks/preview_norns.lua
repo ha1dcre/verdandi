@@ -35,13 +35,19 @@ screen.ping = function() end
 local sounding = {}
 engine = {
   patch = function() end, set = function() end, load_sample = function() end,
-  note_on = function(id, hz, vel) sounding[id] = true; host:engine("note_on", hz, vel) end,
+  note_on = function(id, hz, vel) sounding[id] = true; _preview_note_at = util.time(); host:engine("note_on", hz, vel) end,
   note_off = function(id) sounding[id] = nil end,
   all_off = function() sounding = {} end, kill = function() sounding = {} end,
 }
 poll = {set = function(name, f)
   local p = {time = 0.1}
   function p:start() _preview_polls[#_preview_polls + 1] = function()
+    if name == "amp_out_l" then
+      -- no audio here: the level of the output rises with each note and falls after it
+      local age = util.time() - (_preview_note_at or -10)
+      f(math.max(0, 1 - age / 0.6) * 0.3)
+      return
+    end
     local n = 0
     for _ in pairs(sounding) do n = n + 1 end
     f(n)
@@ -164,6 +170,10 @@ function arc_dev:all() end
 function arc_dev:refresh() end
 function arc_dev:segment() end
 arc = {connect = function() return arc_dev end}
+function _preview_test_note()
+  _preview_note_at = util.time()
+  if _blk_vis then _blk_vis.note_on(60, 100) end
+end
 function _preview_grid_key(x, y, z)
   if grid_dev.key then grid_dev.key(x, y, z) end
 end

@@ -82,7 +82,13 @@ scripts without writing Lua. two pages make one document:
   on top of `blocks.js`;
 - **sound**, how it sounds: a patch of modules and cables played by Weave, the modular engine
   in `sc/engines/WeaveGraph.sc` and `Engine_Weave.sc` (21 modules and 13 effects, listed in
-  `macos/blocks/weave.json`; 11 presets). every knob becomes a norns parameter.
+  `macos/blocks/weave.json`; 11 presets). every knob becomes a norns parameter;
+- **screen**, how it looks: elements placed on the 128 x 64 screen (text with live values like
+  `{note}` and `{tempo}`, shapes, meters, dials, the looper wave, steps, and moving ones: rings
+  and sparks on notes, orbit, wave, spiral, lissajous, stars, rain, snow, a bouncing ball). any
+  number can move with the beat, over time, on each note, with the sound level, a control or a
+  looper. listed in `macos/blocks/screen.json`, drawn by the Lua of `macos/blocks/screen.js`
+  first in redraw(); blocks pick pages, hide elements and set values.
 a guide in the page teaches it in lessons whose steps check themselves. the builder writes an
 ordinary script, `code/<name>/<name>.lua`, next to its blocks (`<name>.blocks.json`); it never
 writes into a folder it did not make. run and stop go through matron's REPL (:5555); while a

@@ -71,6 +71,7 @@
         '  _blk_note_id = (_blk_note_id or 0) % 100000 + 1',
         '  local id = 1000 + _blk_note_id',
         '  engine.note_on(id, hz, util.clamp(vel, 0, 127) / 127)',
+        '  if _blk_vis then _blk_vis.note_on(musicutil.freq_to_note_num(hz), vel) end',
         '  clock.run(function()',
         '    clock.sleep(clock.get_beat_sec() * beats)',
         '    engine.note_off(id)',
@@ -90,6 +91,7 @@
           'function ' + g.FUNCTION_NAME_PLACEHOLDER_ + '(note, vel)',
           '  if note == nil then return end',
           '  engine.note_on(note, musicutil.note_num_to_freq(note), util.clamp(vel, 0, 127) / 127)',
+          '  if _blk_vis then _blk_vis.note_on(note, vel) end',
           'end']);
         return fn + '(' + v(bl, 'NOTE') + ', ' + v(bl, 'VEL') + ')\n';
       };
@@ -114,7 +116,8 @@
         use();
         ctx.use('midi');
         const I = g.INDENT;
-        ctx.S().midi.push({type: 'on', body: I + 'engine.note_on(note, musicutil.note_num_to_freq(note), vel / 127)\n'});
+        ctx.S().midi.push({type: 'on', body: I + 'engine.note_on(note, musicutil.note_num_to_freq(note), vel / 127)\n' +
+          I + 'if _blk_vis then _blk_vis.note_on(note, vel) end\n'});
         ctx.S().midi.push({type: 'off', body: I + 'engine.note_off(note)\n'});
         return '';
       };

@@ -7,6 +7,7 @@
 <link rel="icon" href="../maiden_32.png">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="patcher.css">
+<link rel="stylesheet" href="designer.css">
 </head>
 <body>
 <header>
@@ -16,6 +17,7 @@
   <nav class="views" role="tablist" aria-label="what to edit">
     <button role="tab" data-view="blocks" aria-selected="true" title="what the script does">blocks</button>
     <button role="tab" data-view="sound" aria-selected="false" title="how it sounds: modules and cables">sound</button>
+    <button role="tab" data-view="screen" aria-selected="false" title="how it looks: the screen, and what moves on it">screen</button>
   </nav>
   <button id="guide-open" class="guide-open" title="step by step: how to build a script">guide</button>
   <nav>
@@ -32,6 +34,7 @@
   <div class="work">
     <div id="blockly"></div>
     <div id="patcher" hidden></div>
+    <div id="designer" hidden></div>
     <section id="guide" class="guide" hidden aria-live="polite"></section>
   </div>
   <aside>
@@ -89,6 +92,9 @@
 <script src="blocks_looper.js"></script>
 <script src="blocks_grid.js"></script>
 <script src="blocks_ui.js"></script>
+<script src="blocks_screen.js"></script>
+<script src="screen.js"></script>
+<script src="designer.js"></script>
 <script src="weave.js"></script>
 <script src="patcher.js"></script>
 <script src="guide.js"></script>

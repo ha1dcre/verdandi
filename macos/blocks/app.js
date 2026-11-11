@@ -12,7 +12,9 @@
 
   const catalog = await (await fetch('weave.json')).json();
   const presets = await (await fetch('weave_presets.json')).json();
+  const screenCatalog = await (await fetch('screen.json')).json();
   const W = window.VerdandiWeave;
+  const SCREEN = window.VerdandiScreen;
 
   // ---- the sound page
   let patch = clone(W.DEFAULT_PATCH);
@@ -39,7 +41,26 @@
   });
   patcher.setPatch(patch);
 
-  const gen = VerdandiBlocks.register(Blockly, window.lua, {getPatch: () => patch, weave: W, catalog});
+  // ---- the screen page
+  let design = {layers: []};
+  const designer = new VerdandiDesigner($('designer'), screenCatalog, {
+    onChange: d => { design = d; changed(); },
+    onTestNote: () => preview.testNote(),
+    // the controls a script has: its own (add control / choice / switch) and every sound knob
+    getControls: () => ws.getAllBlocks(false)
+      .filter(b => ['nv_param_add', 'nv_param_option', 'nv_param_switch'].includes(b.type))
+      .map(b => b.getFieldValue('NAME'))
+      .concat(W.params(patch, catalog).map(p => p.name)),
+  });
+  designer.setDesign(design);
+  const live = document.createElement('canvas');
+  live.width = 128;
+  live.height = 64;
+  live.className = 'designer-live';
+  designer.stage.appendChild(live);
+
+  const gen = VerdandiBlocks.register(Blockly, window.lua, {getPatch: () => patch, weave: W, catalog,
+    getDesign: () => design, screen: SCREEN, screenCatalog});
 
   // ---- workspace
   const dark = window.matchMedia('(prefers-color-scheme: dark)');
@@ -72,6 +93,7 @@
     for (const t of document.querySelectorAll('[data-view]')) t.setAttribute('aria-selected', String(t.dataset.view === which));
     $('blockly').hidden = which !== 'blocks';
     $('patcher').hidden = which !== 'sound';
+    $('designer').hidden = which !== 'screen';
     if (which === 'blocks') Blockly.svgResize(ws);
     guide.update();
   }
@@ -111,7 +133,7 @@
   }
   function documentJson() {
     return {format: FORMAT, version: 2, name: scriptName(), workspace: Blockly.serialization.workspaces.save(ws),
-      patch: patcher.getPatch()};
+      patch: patcher.getPatch(), design: designer.getDesign()};
   }
 
   // ---- changes: Lua view, draft, preview, guide
@@ -160,6 +182,9 @@
     patch = clone((doc && doc.patch) || W.DEFAULT_PATCH);
     patcher.setPatch(patch);
     patch = patcher.getPatch();
+    design = clone((doc && doc.design) || {layers: []});
+    designer.setDesign(design);
+    design = designer.getDesign();
     ws.clear();
     if (doc && doc.workspace) Blockly.serialization.workspaces.load(doc.workspace, ws);
     if (opts && opts.arrange) arrange();
@@ -228,6 +253,7 @@
     ['looper', 'looper.json', 'record a loop with K2 and K3, overdub, change its speed'],
     ['drums', 'drums.json', 'euclidean rhythms and a pattern on the kick patch, tempo on E2'],
     ['grid_keys', 'grid_keys.json', 'a grid keyboard for the sound, lit where it is held'],
+    ['visuals', 'visuals.json', 'stars, rings and sparks on every note, an orbit, a wave with the sound: the screen page'],
   ];
   async function openDialog() {
     const list = $('open-list');
@@ -385,6 +411,7 @@
     grid_all: l => gridLeds.fill(l),
     grid_refresh: () => { gridShown = gridLeds.slice(); drawGrid(); },
   }, 'lib/');
+  preview.addOutput(live);
   async function startPreview() {
     gridCanvas.hidden = true;
     gridLeds.fill(0);
@@ -469,6 +496,7 @@
   const guide = new VerdandiGuide($('guide'), {
     workspace: ws,
     getPatch: () => patch,
+    getDesign: () => design,
     getView: () => view,
     showView,
     newDocument: () => {
@@ -505,7 +533,7 @@
     status('the example first_steps: change it, name it, run it, or open the guide');
     if (!guide.seen()) guide.open();
   }
-  if (query.get('view') === 'sound') showView('sound');
+  if (['sound', 'screen'].includes(query.get('view'))) showView(query.get('view'));
   if (query.has('guide')) guide.open(Number(query.get('guide')) || 0, Number(query.get('step')) || 0);
   connect();
 })();

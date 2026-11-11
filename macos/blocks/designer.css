@@ -1,0 +1,94 @@
+/* the screen designer: uses the builder tokens (--bg --panel --line --text --muted --accent --accent-text --ok --bad) */
+.vd {
+  display: flex; flex-direction: column;
+  height: 100%; min-height: 0; min-width: 0;
+  background: var(--bg); color: var(--text);
+  font: 12px/1.35 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+}
+.vd * { box-sizing: border-box; }
+.vd button, .vd input, .vd select {
+  font: inherit; color: var(--text);
+}
+.vd button { padding: 2px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); cursor: pointer; }
+.vd button:hover { border-color: var(--muted); }
+.vd button:disabled { opacity: 0.35; cursor: default; }
+.vd button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
+.vd input, .vd select {
+  min-width: 0; padding: 1px 4px; height: 22px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg);
+}
+.vd input[type=range] { padding: 0; height: 18px; border: 0; background: transparent; accent-color: var(--accent); }
+.vd :focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* toolbar */
+.vd-toolbar {
+  display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 16px;
+  padding: 6px 10px; background: var(--panel); border-bottom: 1px solid var(--line);
+}
+.vd-group { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.vd-grouplabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); flex: none; }
+.vd-addrow { display: flex; flex-wrap: wrap; gap: 3px; }
+.vd-add { padding: 1px 7px !important; font-size: 11px; }
+.vd-test { margin-left: auto; align-self: center; }
+
+/* body */
+.vd-body { flex: 1; display: flex; min-height: 0; }
+.vd-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.vd-area {
+  flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 12px;
+  overflow: hidden; outline: none;
+  background-image: radial-gradient(circle, rgba(128, 128, 128, 0.22) 1px, transparent 1.5px); background-size: 16px 16px;
+}
+.vd-stagebox {
+  position: relative; flex: none; width: 512px; height: 256px; background: #0b0b0b;
+  box-shadow: 0 0 0 6px var(--screen-frame, #2a2a2a), 0 4px 18px rgba(0, 0, 0, 0.35);
+  border-radius: 1px;
+}
+.vd-stage { position: absolute; inset: 0; overflow: hidden; }
+.vd-stage > canvas { display: block; }
+.vd-overlay { position: absolute; left: 0; top: 0; overflow: visible; z-index: 2; touch-action: none; }
+.vd-o-sel { fill: rgba(224, 145, 63, 0.08); stroke: var(--accent); stroke-width: 1.5; }
+.vd-o-other { fill: none; stroke: rgba(255, 255, 255, 0.35); stroke-width: 1; stroke-dasharray: 4 3; }
+.vd-o-other.hot { stroke: rgba(255, 255, 255, 0.8); }
+.vd-o-handle { fill: var(--accent); stroke: #0b0b0b; stroke-width: 1; }
+.vd-hint { padding: 4px 12px 6px; color: var(--muted); font-size: 11px; text-align: center; }
+
+/* side panel */
+.vd-side {
+  width: 310px; flex: none; display: flex; flex-direction: column; min-height: 0;
+  background: var(--panel); border-left: 1px solid var(--line);
+}
+.vd-title { padding: 7px 10px 3px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.vd-list { flex: none; max-height: 34%; min-height: 40px; overflow: auto; padding: 0 6px 4px; outline: none; }
+.vd-row {
+  display: flex; align-items: center; gap: 5px; height: 26px; padding: 0 4px; margin-bottom: 2px;
+  background: var(--bg); border: 1px solid var(--line); border-left: 3px solid var(--line); border-radius: 4px; cursor: pointer;
+}
+.vd-row:hover { border-color: var(--muted); }
+.vd-row.sel { border-color: var(--accent); border-left-color: var(--accent); }
+.vd-row.hidden .vd-rid, .vd-row.hidden .vd-rtype { opacity: 0.45; }
+.vd-rid { font-weight: 600; font-family: ui-monospace, Menlo, monospace; flex: none; }
+.vd-rtype { color: var(--muted); font-size: 11px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vd-acts { display: flex; gap: 1px; flex: none; }
+.vd .vd-ib { width: 22px; height: 20px; padding: 0 !important; display: inline-flex; align-items: center; justify-content: center; border-color: transparent; background: transparent; color: var(--muted); line-height: 1; }
+.vd .vd-ib:hover { color: var(--text); background: var(--panel); border-color: var(--line); }
+.vd .vd-del:hover { color: var(--bad); }
+.vd .vd-eye { color: var(--text); }
+.vd-empty { color: var(--muted); font-style: italic; padding: 4px 6px; }
+.vd-props { flex: 1; min-height: 0; overflow: auto; padding: 0 10px 12px; }
+.vd-about { color: var(--muted); font-size: 11px; margin: 0 0 6px; }
+.vd-prop { padding: 3px 0; border-top: 1px solid var(--line); }
+.vd-prop:first-of-type { border-top: 0; }
+.vd-pline { display: grid; grid-template-columns: 64px 1fr 72px; align-items: center; gap: 5px; min-height: 22px; }
+.vd-pline-wide { grid-template-columns: 64px 1fr; }
+.vd-plabel { color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vd-numcell { display: flex; align-items: center; gap: 3px; min-width: 0; }
+.vd-num { width: 100%; text-align: right; font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
+.vd-units { color: var(--muted); font-size: 10px; flex: none; }
+.vd-moveline { display: grid; grid-template-columns: 64px 1fr; align-items: center; gap: 5px; margin-top: 1px; }
+.vd-ml { color: var(--muted); font-size: 10px; text-align: right; padding-right: 2px; }
+.vd-moves { height: 20px; font-size: 11px; padding: 0 2px; }
+.vd-anim { margin: 4px 0 2px 69px; padding: 5px 6px; background: var(--bg); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 4px; }
+.vd-agrid { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 4px 6px; }
+.vd-al { color: var(--muted); font-size: 11px; }
+.vd-anum { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 11px; text-align: right; }
+.vd-anim .vd-about { margin: 5px 0 0; font-size: 10px; }

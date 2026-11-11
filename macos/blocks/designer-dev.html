@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>designer dev</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./designer.css">
+<style>
+  body { display: block; overflow: auto; height: auto; }
+  html[data-theme="light"] { --bg:#f4f4f2; --panel:#fff; --line:#d9d9d4; --text:#222; --muted:#6d6d68; --accent:#b5651d; --accent-text:#fff; --ok:#3f8f4f; --bad:#b23b3b; --screen-frame:#2a2a2a; color-scheme: light; }
+  html[data-theme="dark"] { --bg:#151515; --panel:#1d1d1d; --line:#333; --text:#ddd; --muted:#8c8c86; --accent:#e0913f; --accent-text:#151515; --ok:#6cbf7b; --bad:#e06c6c; --screen-frame:#0b0b0b; color-scheme: dark; }
+  #host { height: 700px; border-bottom: 1px solid var(--line); }
+  pre { margin: 0; padding: 4px 10px; font: 11px/1.3 ui-monospace, Menlo, monospace; white-space: pre-wrap; max-height: 120px; overflow: auto; }
+</style>
+</head>
+<body>
+<div id="host"></div>
+<pre id="check">check pending</pre>
+<pre id="log"></pre>
+<script src="./designer.js"></script>
+<script>
+(function () {
+  var q = location.search;
+  if (/light/.test(q)) document.documentElement.setAttribute('data-theme', 'light');
+  if (/dark/.test(q)) document.documentElement.setAttribute('data-theme', 'dark');
+  var logEl = document.getElementById('log'), checkEl = document.getElementById('check');
+  function log(s) { logEl.textContent += s + '\n'; }
+
+  function A(k, from, to, extra) { var a = { kind: k, from: from, to: to }; for (var n in extra || {}) a[n] = extra[n]; return a; }
+  var SAMPLE = { layers: [
+    { id: 'text1', type: 'text', props: { text: { v: 'hello {note}' }, x: { v: 4 }, y: { v: 12 }, size: { v: 8 }, align: { v: 'left' },
+      level: { v: 15, anim: A('beat', 4, 15, { beats: 4, shape: 'sine' }) }, page: { v: 0 } } },
+    { id: 'rings1', type: 'rings', props: { x: { v: 64 }, y: { v: 32 }, r: { v: 30 } } },
+    { id: 'bar1', type: 'bar', props: { x: { v: 10 }, y: { v: 54 }, w: { v: 108 }, h: { v: 4 }, value: { v: 0.5, anim: A('level', 0, 1) } } },
+    { id: 'line1', type: 'line', props: { x1: { v: 10 }, y1: { v: 48 }, x2: { v: 118 }, y2: { v: 30 }, width: { v: 2 } } },
+    { id: 'orbit1', type: 'orbit', props: { x: { v: 96 }, y: { v: 22 }, r: { v: 14 } } }
+  ] };
+
+  var d, canvas, ctx, cat;
+  function redraw(design) {
+    ctx.fillStyle = '#0b0b0b'; ctx.fillRect(0, 0, 128, 64);
+    design.layers.forEach(function (l) {
+      if (l.hidden) return;
+      var b = d.boxOf(l), lv = l.props.level ? l.props.level.v : 8, g = Math.round(40 + lv * 10);
+      ctx.fillStyle = 'rgba(' + g + ',' + g + ',' + g + ',0.35)'; ctx.fillRect(b.x, b.y, b.w, b.h);
+      ctx.strokeStyle = 'rgb(' + g + ',' + g + ',' + g + ')'; ctx.lineWidth = 1; ctx.strokeRect(b.x + 0.5, b.y + 0.5, Math.max(0, b.w - 1), Math.max(0, b.h - 1));
+      ctx.fillStyle = '#9a9a9a'; ctx.font = '5px sans-serif'; ctx.fillText(l.id, b.x + 1, b.y + 6);
+    });
+  }
+  function ready(catalog) {
+    cat = catalog;
+    d = new VerdandiDesigner(document.getElementById('host'), catalog, {
+      onChange: function (design, s) { log('onChange structural=' + s + ' layers=' + design.layers.map(function (l) { return l.id; })); redraw(design); },
+      onTestNote: function () { log('onTestNote'); },
+      getControls: function () { return ['cutoff', 'filter1 cutoff', 'resonance']; }
+    });
+    canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 64;
+    canvas.style.cssText = 'width:100%;height:100%;display:block;image-rendering:pixelated';
+    d.stage.appendChild(canvas); ctx = canvas.getContext('2d');
+    d.setDesign(SAMPLE); redraw(d.getDesign()); d.select('text1');
+    if (!/nocheck/.test(q)) setTimeout(selfCheck, 50);
+    else checkEl.textContent = 'check skipped';
+  }
+
+  function selfCheck() {
+    var out = [], bad = 0;
+    function t(name, ok, info) { if (!ok) bad++; out.push((ok ? 'PASS ' : 'FAIL ') + name + (info ? '  ' + info : '')); }
+    function L(id) { return d.getDesign().layers.filter(function (l) { return l.id === id; })[0]; }
+    function ids() { return d.getDesign().layers.map(function (l) { return l.id; }).join(','); }
+    var warns = [], ow = console.warn; console.warn = function () { warns.push([].slice.call(arguments).join(' ')); };
+    try {
+      var n0 = d.getDesign().layers.length;
+      d.select(null);
+      document.querySelector('.vd-add[data-type="rect"]').click();
+      var r = L('rect1');
+      t('add rect through its button', !!r && d.getDesign().layers.length === n0 + 1 && r.props.w.v === 30 && r.props.fill.v === 'outlined' && r.props.page.v === 0, ids());
+      t('new layer is on top and selected', d.getDesign().layers.slice(-1)[0].id === 'rect1' && d.sel === 'rect1');
+      d.addLayer('bar'); t('suggested animation on add (meter value)', L('bar2').props.value.anim && L('bar2').props.value.anim.kind === 'level' && L('bar2').props.value.anim.from === 0 && L('bar2').props.value.anim.to === 1, JSON.stringify(L('bar2').props.value.anim));
+      d.removeLayer('bar2');
+
+      d.select(null);
+      d.pointerDown(30, 20); d.pointerUp();
+      t('select by click inside box', d.sel === 'rect1', 'sel=' + d.sel);
+      d.pointerDown(125, 5); d.pointerUp();
+      t('click empty space deselects', d.sel === null);
+      d.pointerDown(30, 20); d.pointerMove(50, 30); d.pointerUp();
+      r = L('rect1');
+      t('move by drag', r.props.x.v === 30 && r.props.y.v === 20, 'x=' + r.props.x.v + ' y=' + r.props.y.v);
+      d.pointerDown(60, 36); d.pointerMove(70, 40); d.pointerUp();
+      r = L('rect1');
+      t('resize by handle (se)', r.props.w.v === 40 && r.props.h.v === 20, 'w=' + r.props.w.v + ' h=' + r.props.h.v);
+      d.pointerDown(40, 25); d.pointerMove(-500, 900); d.pointerUp();
+      r = L('rect1');
+      t('drag stays inside min/max', r.props.x.v === 0 && r.props.y.v === 63, 'x=' + r.props.x.v + ' y=' + r.props.y.v);
+      d.pointerDown(1, 64); d.pointerMove(31, 21); d.pointerUp();
+
+      // real DOM events on the overlay
+      var rect = d.overlay.getBoundingClientRect(), sc = rect.width / 128;
+      function ev(type, x, y) { d.overlay.dispatchEvent(new PointerEvent(type, { clientX: rect.left + x * sc, clientY: rect.top + y * sc, bubbles: true, pointerId: 1, button: 0 })); }
+      d.select(null);
+      var rr = L('rect1'); var cx = rr.props.x.v + 2, cy = rr.props.y.v + 2;
+      ev('pointerdown', cx, cy); ev('pointermove', cx + 6, cy + 4); ev('pointerup', cx + 6, cy + 4);
+      var r2 = L('rect1');
+      t('DOM pointer events move the layer', d.sel === 'rect1' && r2.props.x.v === rr.props.x.v + 6 && r2.props.y.v === rr.props.y.v + 4, 'x=' + r2.props.x.v + ' y=' + r2.props.y.v);
+
+      // animated x: drag and nudge shift from/to
+      d.select('rect1');
+      d.setAnimKind('rect1', 'x', 'beat');
+      var ax = L('rect1').props.x, f0 = ax.anim.from, t0 = ax.anim.to, v0 = ax.v;
+      d.pointerDown(v0 + 2, L('rect1').props.y.v + 2); d.pointerMove(v0 + 2 + 5, L('rect1').props.y.v + 2); d.pointerUp();
+      ax = L('rect1').props.x;
+      t('drag of animated x shifts from/to by the delta', ax.v === v0 + 5 && ax.anim.from === Math.min(127, f0 + 5) && ax.anim.to === Math.min(127, t0 + 5) && ax.anim.from === f0 + 5, JSON.stringify(ax));
+      var f1 = ax.anim.from, t1 = ax.anim.to;
+      d.area.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+      ax = L('rect1').props.x;
+      t('nudge of animated x shifts from/to', ax.v === v0 + 4 && ax.anim.from === Math.max(0, f1 - 1) && ax.anim.to === Math.max(0, t1 - 1), JSON.stringify(ax));
+      d.setAnimKind('rect1', 'x', 'fixed');
+      d.nudge(-5, 0); d.nudge(5, 0);
+
+      // line move moves both ends
+      var l1 = L('line1');
+      d.pointerDown(100, 45); d.pointerMove(105, 48); d.pointerUp();
+      var l2 = L('line1');
+      t('line moves both ends', d.sel === 'line1' && l2.props.x1.v === l1.props.x1.v + 5 && l2.props.x2.v === l1.props.x2.v + 5 && l2.props.y2.v === l1.props.y2.v + 3, JSON.stringify([l2.props.x1.v, l2.props.y1.v, l2.props.x2.v, l2.props.y2.v]));
+
+      // animation
+      d.select('rect1');
+      var sel = document.querySelector('.vd-prop[data-prop="level"] select.vd-moves');
+      sel.value = 'note'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+      var a = L('rect1').props.level.anim;
+      t('switch to "on each note" prefills from/to/decay', a && a.kind === 'note' && a.from === 8 && a.to === 15 && a.decay === 0.5, JSON.stringify(a));
+      var fromIn = document.querySelector('.vd-prop[data-prop="level"] input[data-field="to"]');
+      fromIn.value = '12'; fromIn.dispatchEvent(new Event('input', { bubbles: true }));
+      t('edit "to" input', L('rect1').props.level.anim.to === 12);
+      sel = document.querySelector('.vd-prop[data-prop="level"] select.vd-moves');
+      sel.value = 'beat'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+      a = L('rect1').props.level.anim;
+      t('switch kind keeps from/to, new fields', a.kind === 'beat' && a.from === 8 && a.to === 12 && a.beats === 4 && a.shape === 'sine' && a.decay === undefined, JSON.stringify(a));
+      sel = document.querySelector('.vd-prop[data-prop="level"] select.vd-moves');
+      sel.value = 'fixed'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+      t('back to fixed removes anim', L('rect1').props.level.anim === undefined);
+      d.select('dial1'); d.addLayer('dial'); sel = document.querySelector('.vd-prop[data-prop="control"] input.vd-text');
+      t('control field has datalist', sel && sel.getAttribute('list') === d.dl.id && d.dl.children.length === 3);
+
+      // keys
+      d.select('rect1');
+      var x0 = L('rect1').props.x.v;
+      d.area.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      d.area.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', shiftKey: true, bubbles: true }));
+      t('arrow keys nudge (1 px, shift 8)', L('rect1').props.x.v === x0 + 1, 'x ' + x0 + ' -> ' + L('rect1').props.x.v);
+
+      // order, hide, duplicate, remove
+      var before = ids();
+      d.moveLayer('rect1', -1);
+      var after = ids();
+      t('reorder (down one)', before !== after && d.getDesign().layers.map(function (l) { return l.id; }).indexOf('rect1') === before.split(',').indexOf('rect1') - 1, after);
+      d.moveLayer('rect1', 1);
+      d.setHidden('rect1', true);
+      t('hide', L('rect1').hidden === true);
+      d.select(null); d.pointerDown(30, 20); d.pointerUp();
+      t('hidden layer is not picked', d.sel !== 'rect1');
+      d.setHidden('rect1', false);
+      var nb = d.getDesign().layers.length;
+      var dup = d.duplicateLayer('rect1');
+      t('duplicate', dup === 'rect2' && d.getDesign().layers.length === nb + 1 && d.sel === 'rect2' && L('rect2').props.x.v !== L('rect1').props.x.v, ids());
+      d.area.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', metaKey: true, bubbles: true }));
+      t('cmd+D duplicates', !!L('rect3'));
+      d.area.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }));
+      t('Delete removes the selection', !L('rect3') && d.sel === null);
+      d.removeLayer('rect2');
+      t('remove', !L('rect2'), ids());
+      var ids0 = ids(); d.removeLayer('rect1'); d.removeLayer('dial1');
+
+      // round trip
+      var g1 = JSON.stringify(d.getDesign());
+      d.setDesign(JSON.parse(g1));
+      t('setDesign/getDesign round trip', JSON.stringify(d.getDesign()) === g1);
+      var full = d.getDesign().layers[0].props;
+      t('getDesign fills every prop + page', ['text', 'x', 'y', 'size', 'level', 'align', 'page'].every(function (k) { return full[k] !== undefined; }));
+      // unknown type, sparse props
+      warns.length = 0;
+      d.setDesign({ layers: [{ id: 'zzz1', type: 'zzz', props: {} }, { type: 'circle', props: { r: { v: 9 } } }, { type: 'circle' }] });
+      var g = d.getDesign().layers;
+      t('unknown type dropped with a warning, sparse layers filled', g.length === 2 && g[0].id === 'circle1' && g[0].props.r.v === 9 && g[0].props.x.v === 64 && g[1].id === 'circle2' && warns.length === 1, ids() + ' warns=' + warns.length);
+      d.setDesign(SAMPLE);
+      var cbs = 0; var oc = d.opts.onChange; d.opts.onChange = function () { cbs++; };
+      d.setDesign(SAMPLE); t('setDesign does not call onChange', cbs === 0); d.opts.onChange = oc;
+      d.select('text1');
+      var okSz = d.stage.children.length === 1 && Math.abs(d.stage.getBoundingClientRect().width - 128 * d.scale) < 1 && Math.abs(d.overlay.getBoundingClientRect().width - d.stage.getBoundingClientRect().width) < 1;
+      t('stage size ' + d.stage.getBoundingClientRect().width + 'x' + d.stage.getBoundingClientRect().height + ' (scale ' + d.scale + '), overlay aligned', okSz);
+    } catch (e) { t('exception', false, String(e && e.stack || e)); }
+    console.warn = ow;
+    checkEl.textContent = out.join('\n') + '\n' + (bad ? bad + ' FAILED' : 'ALL PASSED');
+    document.title = 'check done';
+  }
+
+  fetch('./screen.json').then(function (r) { return r.json(); }).then(ready);
+})();
+</script>
+</body>
+</html>
