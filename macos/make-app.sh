@@ -53,6 +53,7 @@ cp "$REPO/update/version.txt" "$R/norns/update/"
 # the MANUAL button on the device (lua/core/menu.lua) opens it when a script has no docs
 mkdir -p "$R/norns/macos/manual"
 cp "$REPO/macos/manual/manual.html" "$R/norns/macos/manual/"
+cp -R "$REPO/macos/manual/builder" "$R/norns/macos/manual/"
 # named after the app: macOS names a crash after the process (norns.sh takes either name)
 cp "$REPO/build/norns/norns" "$R/norns/build/norns/Verdandi"
 cp "$REPO/build/ws-wrapper/ws-wrapper" "$R/norns/build/ws-wrapper/"
@@ -101,7 +102,7 @@ cat > "$APP/Contents/Info.plist" <<EOF
     <key>CFBundleIdentifier</key><string>community.verdandi.app</string>
     <key>CFBundleExecutable</key><string>Verdandi</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>0.1.5</string>
+    <key>CFBundleShortVersionString</key><string>0.1.6</string>
     <key>CFBundleVersion</key><string>$VERSION</string>
     <key>LSMinimumSystemVersion</key><string>$MIN</string>
     <key>LSUIElement</key><true/>
@@ -167,8 +168,16 @@ if [ "${1:-}" = "--dmg" ]; then
     cp -R "$R/Licenses" "$STAGE/Licenses"
     ln -s /Applications "$STAGE/Applications"
     [ -f "$REPO/macos/manual/norns-macos-manual.pdf" ] && cp "$REPO/macos/manual/norns-macos-manual.pdf" "$STAGE/Manual.pdf"
-    [ -f "$REPO/macos/manual/manual.html" ] && cp "$REPO/macos/manual/manual.html" "$STAGE/Manual.html"
-    [ -f "$REPO/macos/manual/script-builder-manual.pdf" ] && cp "$REPO/macos/manual/script-builder-manual.pdf" "$STAGE/Script Builder Manual.pdf"
+    # one file on the disk image: the manual's pictures go inside it
+    [ -f "$REPO/macos/manual/manual.html" ] && python3 -I - "$REPO/macos/manual/manual.html" "$STAGE/Manual.html" <<'PY'
+import base64, os, re, sys
+src, dst = sys.argv[1], sys.argv[2]
+d = os.path.dirname(src)
+def inline(m):
+    data = base64.b64encode(open(os.path.join(d, m.group(1)), 'rb').read()).decode()
+    return 'src="data:image/jpeg;base64,' + data + '"'
+open(dst, 'w').write(re.sub(r'src="(builder/[^"]+\.jpg)"', inline, open(src).read()))
+PY
     chmod 644 "$STAGE"/Manual.* 2>/dev/null
     xattr -c "$STAGE"/Manual.* 2>/dev/null
     hdiutil create -volname Verdandi -srcfolder "$STAGE" -fs HFS+ -format UDZO -imagekey zlib-level=9 -ov "$OUT/Verdandi.dmg" >/dev/null

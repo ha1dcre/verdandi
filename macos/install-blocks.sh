@@ -28,6 +28,10 @@ cp -R "$BLOCKLY/media" "$B/vendor/blockly/"
 cp "$FENGARI/dist/fengari-web.js" "$FENGARI/LICENSE" "$B/vendor/fengari/"
 for l in util tabutil musicutil sequins ui er; do cp "$REPO/lua/lib/$l.lua" "$B/lib/"; done
 cp "$REPO/resources/norns.ttf" "$B/lib/"
+# the manual, for the builder's manual link (its chapter 8)
+mkdir -p "$B/manual"
+cp "$REPO/macos/manual/manual.html" "$B/manual/"
+cp -R "$REPO/macos/manual/builder" "$B/manual/"
 
 # a link from maiden's page to the builder, once (maiden's own app is not rebuilt for it)
 LINK='<a id="verdandi-blocks" href="/maiden/blocks/" title="build a script from blocks" style="position:fixed;right:14px;bottom:12px;z-index:1000;padding:5px 11px;border-radius:14px;background:#e0913f;color:#151515;font:600 12px -apple-system,BlinkMacSystemFont,sans-serif;text-decoration:none;box-shadow:0 1px 4px rgba(0,0,0,.35)">blocks</a>'

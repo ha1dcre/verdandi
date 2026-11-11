@@ -101,6 +101,8 @@ main {
 .views button { border-radius: 4px 4px 0 0; border-bottom: 2px solid transparent; }
 .views button[aria-selected="true"] { border-bottom-color: var(--accent); font-weight: 600; }
 .guide-open { background: none; border-color: var(--accent); color: var(--accent); }
+.manual-link { color: var(--muted); text-decoration: none; font-size: 13px; }
+.manual-link:hover { color: var(--text); }
 #grid { display: block; margin: 10px auto 0; width: 321px; height: 161px; cursor: pointer; border-radius: 4px; background: #0b0b0b; }
 #grid[hidden] { display: none; }
 
