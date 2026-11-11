@@ -20,10 +20,12 @@ const FULL = process.argv.includes('--full');
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const W = 1440, H = 860;
 const PORT = 9333;
-// the window frames of an earlier take would slip into this one: they go first
-fs.rmSync(path.join(OUT, 'window'), {recursive: true, force: true});
-fs.mkdirSync(path.join(OUT, 'window'), {recursive: true});
-for (const f of fs.readdirSync(OUT)) if (f.startsWith('profile-')) fs.rmSync(path.join(OUT, f), {recursive: true, force: true});
+// a new take: the window frames of an earlier one would slip into it (--assemble keeps them)
+if (!process.argv.includes('--assemble')) {
+  fs.rmSync(path.join(OUT, 'window'), {recursive: true, force: true});
+  fs.mkdirSync(path.join(OUT, 'window'), {recursive: true});
+  for (const f of fs.readdirSync(OUT)) if (f.startsWith('profile-')) fs.rmSync(path.join(OUT, f), {recursive: true, force: true});
+}
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const now = () => Date.now() / 1000;
 const scenes = [];

@@ -1,0 +1,17 @@
+This is the script builder in Verdandi. It makes norns scripts without writing any Lua. You open it from maiden, with the blocks button.
+
+A script is made of event blocks: they say when something happens. When the script starts, we add a control called cutoff, from two hundred to four thousand.
+
+Every quarter beat, a counter steps from one to sixteen, and play note plays the melody: note numbers written as text, a dot is a rest. On the right, the preview already runs it, silently.
+
+When encoder two turns, it changes the control. And when the control changes, it sets the filter cutoff of our sound. Everything you can set has a block like this, and a dropdown with every knob of the instrument.
+
+This is the sound page: the instrument the notes play. We add an LFO, plug its output into the filter, make it slow, and add a delay.
+
+The screen page puts things on the norns screen, and makes them move. Stars, rings on every note, and the name of the note, jumping with each one. The meter follows the cutoff control.
+
+Give it a name, and press run.
+
+And there it is, running in Verdandi, with sound. Turning encoder two opens and closes the filter, and the meter moves with it. The script is a real norns script, saved in maiden, ready for any norns.
+
+While it runs, the sound page plays live: the keyboard, and every knob. Open the guide in the builder to learn it step by step. Have fun.

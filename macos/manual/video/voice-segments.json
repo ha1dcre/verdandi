@@ -1,0 +1,3 @@
+{"about": "where each paragraph of narration.txt is in voice.mp3 (seconds), in scene order",
+ "segments": [[0.0, 8.39], [8.86, 19.03], [19.36, 32.21], [32.57, 44.79], [45.12, 54.29], [54.73, 65.78], [66.17, 68.02], [68.42, 81.58], [81.86, 90.83]],
+ "scenes": ["maiden", "control", "melody", "encoder", "sound", "screen", "run", "verdandi", "live"]}
