@@ -15,17 +15,16 @@ const path = require('path');
 const {spawn, execFileSync, execFile} = require('child_process');
 const run = (cmd, args) => new Promise((ok, bad) => execFile(cmd, args, e => e ? bad(e) : ok()));
 
-const OUT = path.resolve(process.argv[2] || 'video-out');
+// every take goes into a folder of its own (take-<time>), so a bad take never replaces a good
+// one; --assemble cuts an existing take again: record.js <take folder> --assemble [--full]
+const BASE = path.resolve(process.argv[2] || 'video-out');
+const OUT = process.argv.includes('--assemble') ? BASE :
+  path.join(BASE, 'take-' + new Date().toISOString().replace(/[-:]/g, '').replace(/\..*/, ''));
 const FULL = process.argv.includes('--full');
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const W = 1440, H = 860;
 const PORT = 9333;
-// a new take: the window frames of an earlier one would slip into it (--assemble keeps them)
-if (!process.argv.includes('--assemble')) {
-  fs.rmSync(path.join(OUT, 'window'), {recursive: true, force: true});
-  fs.mkdirSync(path.join(OUT, 'window'), {recursive: true});
-  for (const f of fs.readdirSync(OUT)) if (f.startsWith('profile-')) fs.rmSync(path.join(OUT, f), {recursive: true, force: true});
-}
+if (!process.argv.includes('--assemble')) fs.mkdirSync(path.join(OUT, 'window'), {recursive: true});
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const now = () => Date.now() / 1000;
 const scenes = [];
@@ -57,7 +56,7 @@ function send(method, params = {}) {
   return new Promise((ok, bad) => pending.set(id, {ok, bad, method}));
 }
 async function chrome() {
-  const profile = path.join(OUT, 'profile-' + Date.now());
+  const profile = path.join(OUT, 'profile');
   const proc = spawn(CHROME, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run',
     '--remote-debugging-port=' + PORT, '--user-data-dir=' + profile, '--window-size=' + W + ',' + H, 'about:blank'],
     {stdio: 'ignore'});
@@ -321,6 +320,7 @@ if (process.argv.includes('--assemble')) { assemble(); process.exit(0); }
   const previous = before && before[1] !== 'nil' && before[1] !== '' ? before[1] : null;
   console.log('running before:', previous);
   const win = windowId();
+  console.log('take: ' + OUT);
   const proc = await chrome();
   startEncoder();
   try {
@@ -439,6 +439,9 @@ if (process.argv.includes('--assemble')) { assemble(); process.exit(0); }
     await film(false);
 
     scene('verdandi');
+    // a window under others is not drawn by macOS: Verdandi to the front for its scene
+    try { execFileSync('osascript', ['-e', 'tell application "System Events" to set frontmost of process "norns" to true']); } catch (e) { console.error('could not bring Verdandi to the front: ' + e.message); }
+    await sleep(500);
     const filmed = filmWindow(win);
     await sleep(5000);
     for (let i = 0; i < 6; i++) { await lua('enc(2, 25)', 0); await sleep(700); }
@@ -446,6 +449,10 @@ if (process.argv.includes('--assemble')) { assemble(); process.exit(0); }
     await sleep(4000);
     filmingWindow = false;
     await filmed;
+    // a window that did not change was not drawn (covered, or Verdandi did not run the script)
+    const distinct = new Set(windowFrames.map(f => require('crypto').createHash('md5').update(fs.readFileSync(f.file)).digest('hex'))).size;
+    if (distinct < 10) throw new Error('the Verdandi window did not change while filmed (' + distinct + ' different frames): keep it visible and record again');
+    console.log('verdandi window: ' + distinct + ' different frames');
     execFileSync('sips', ['-s', 'format', 'png', windowFrames[Math.floor(windowFrames.length / 2)].file, '--out', path.join(OUT, 'verdandi.png')], {stdio: 'ignore'});
 
     scene('live');
