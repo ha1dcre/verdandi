@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verdandi — script builder</title>
+<style>
+  :root { --ink: #1b1b1b; --dim: #5f5f5f; --rule: #dcdcdc; --code: #f3f3f3; --accent: #c4701f; }
+  @page { size: A4; margin: 18mm 18mm 20mm 18mm; }
+  html { font: 10.5pt/1.5 -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; color: var(--ink); }
+  body { max-width: 46em; margin: 2.5em auto; padding: 0 1.2em; }
+  h1 { font-size: 2.1em; margin: 0 0 .1em; letter-spacing: -.01em; }
+  .sub { color: var(--dim); margin: 0 0 2em; }
+  h2 { font-size: 1.3em; margin: 2.2em 0 .5em; padding-top: .4em; border-top: 1px solid var(--rule); break-after: avoid; }
+  h3 { font-size: 1.05em; margin: 1.5em 0 .3em; break-after: avoid; }
+  p, ul, ol, table { margin: .5em 0 .8em; }
+  li { margin: .2em 0; }
+  code, kbd { font: .92em/1.3 ui-monospace, "SF Mono", Menlo, monospace; background: var(--code); padding: .08em .3em; border-radius: 3px; }
+  kbd { border: 1px solid #ccc; border-bottom-width: 2px; background: #fafafa; }
+  b.blk { font-weight: 600; color: #7a3f08; }
+  table { border-collapse: collapse; width: 100%; }
+  tr { break-inside: avoid; }
+  th, td { text-align: left; vertical-align: top; padding: .3em .55em; border-bottom: 1px solid var(--rule); font-size: .95em; }
+  th { font-weight: 600; background: #f7f7f7; }
+  td.blockname { white-space: normal; font-weight: 500; width: 46%; }
+  .note { border-left: 3px solid var(--accent); padding: .3em .9em; background: #fbf6f0; break-inside: avoid; }
+  .toc { columns: 2; column-gap: 2em; padding-left: 1.2em; }
+  .small { color: var(--dim); font-size: .92em; }
+  figure { margin: 1em 0 1.4em; break-inside: avoid; }
+  figure img { width: 100%; border: 1px solid var(--rule); border-radius: 4px; display: block; }
+  figcaption { color: var(--dim); font-size: .9em; margin-top: .35em; }
+  ol.steps > li { margin: .45em 0; }
+</style>
+</head>
+<body>
+
+<h1>Script builder</h1>
+<p class="sub">make norns scripts without writing Lua: what happens, how it sounds, how it looks. part of Verdandi (norns on the Mac).
+not affiliated with monome. free software under the GPL-3.0.</p>
+
+<ol class="toc">
+  <li><a href="#what">what it is</a></li>
+  <li><a href="#open">opening it</a></li>
+  <li><a href="#guide">the guide</a></li>
+  <li><a href="#blocks">tutorial 1: the blocks</a></li>
+  <li><a href="#sound">tutorial 2: the sound</a></li>
+  <li><a href="#screen">tutorial 3: the screen</a></li>
+  <li><a href="#run">tutorial 4: run it in Verdandi</a></li>
+  <li><a href="#files">saving, opening, files</a></li>
+  <li><a href="#norns">taking a script to a norns</a></li>
+  <li><a href="#tips">tips and trouble</a></li>
+  <li><a href="#ref-blocks">reference: blocks</a></li>
+  <li><a href="#ref-sound">reference: sound modules and effects</a></li>
+  <li><a href="#ref-screen">reference: screen elements</a></li>
+</ol>
+
+<h2 id="what">1. what it is</h2>
+<p>The script builder makes ordinary norns scripts from three pages. You switch between them at the top:</p>
+<ul>
+  <li><b>blocks</b>: <i>what the script does</i>. Blocks that snap together: when the script starts, every quarter beat,
+    when a key is pressed, when an encoder turns, when a MIDI note arrives, and what happens then: play a note, change a
+    sound, record a loop, light a grid key, draw something.</li>
+  <li><b>sound</b>: <i>how it sounds</i>. An instrument of modules joined by cables (oscillators, filters, envelopes, LFOs,
+    a sampler, effects), played by Weave, the engine that comes with the builder.</li>
+  <li><b>screen</b>: <i>how it looks</i>. Elements placed on the 128 &times; 64 norns screen, and things that move: rings on
+    every note, stars, orbits, waves, meters. Any number can move with the beat, on each note, with the sound.</li>
+</ul>
+<p>What you build is a real norns script: <code>code/&lt;name&gt;/&lt;name&gt;.lua</code> in maiden, with your blocks next to it
+(<code>&lt;name&gt;.blocks.json</code>), so you can open it in the builder again. The <b>lua</b> tab on the right always shows
+the script your blocks make, line by line.</p>
+<p>The builder runs on your Mac only: maiden listens on <code>127.0.0.1</code>, nobody else can see your scripts until you
+share them.</p>
+
+<h2 id="open">2. opening it</h2>
+<ol class="steps">
+  <li>Start Verdandi.</li>
+  <li>Open maiden: the <b>MAIDEN</b> button above the norns screen, or <code>http://127.0.0.1:5000/maiden</code> in a browser.</li>
+  <li>Click the orange <b>blocks</b> button at the bottom right. The builder opens at <code>http://127.0.0.1:5000/maiden/blocks/</code>
+    (bookmark it), with the example <i>first_steps</i>.</li>
+</ol>
+<figure><img src="builder/maiden.jpg" alt="maiden with the blocks button"><figcaption>maiden: the orange <b>blocks</b> button opens the builder.</figcaption></figure>
+<p>The page has the blocks (or the sound, or the screen) on the left and, on the right, a <b>preview</b> of the norns
+screen with K1 to K3 and E1 to E3 you can click (scroll over an encoder to turn it), the <b>lua</b> the blocks make and the
+<b>console</b> of norns. The preview runs your script in the page, silently: you see notes as <code>&#9834; C3</code> under
+the screen. <b>run</b> plays it in Verdandi, with sound.</p>
+
+<h2 id="guide">3. the guide</h2>
+<p><b>guide</b> at the top opens lessons in small steps: your first sound, a melody, the sound page, an encoder, drawing,
+the screen page, a looper, a grid, saving. Each step says where its blocks are (<b>show me</b> opens the right group of
+the toolbox) and notices by itself when you have done it.</p>
+<figure><img src="builder/guide.jpg" alt="the guide"><figcaption>the guide in the corner of the blocks; it ticks a step off when it is done.</figcaption></figure>
+
+<h2 id="blocks">4. tutorial 1: the blocks</h2>
+<p>This tutorial builds <i>glow</i>: a melody, a sound with a moving filter and an echo, a screen that glows with every note,
+and the encoder E2 on the filter. <b>open &gt; glow</b> loads the finished one. To build it yourself, press <b>new</b>.</p>
+<p>The toolbox on the left holds the blocks by group. Click a group, drag a block into the workspace. A block with a
+notch at the top snaps under another one; a round slot takes a value (a number, a note, a block that gives a value).
+Event blocks, with a rounded top, start a stack: everything inside them runs when their event happens.</p>
+<figure><img src="builder/toolbox.jpg" alt="the toolbox, Sequencing open"><figcaption>the toolbox with <b>Sequencing</b> open: patterns, euclidean rhythms, chords, arpeggios, chance.</figcaption></figure>
+<ol class="steps">
+  <li><b>A control.</b> From <b>Events</b>, drag <b class="blk">when the script starts</b>. From <b>Controls</b>, put
+    <b class="blk">add control cutoff from 200 to 4000 starting at 1200</b> into it. A control is a number with a range; it
+    shows in PARAMETERS on the norns, MIDI can move it, and a PSET saves it.</li>
+  <li><b>A beat.</b> From <b>Events</b>, drag <b class="blk">every 1/4 beat</b>. What is inside repeats in time with the norns
+    clock (the tempo is in PARAMETERS &gt; CLOCK).</li>
+  <li><b>A counter.</b> From <b>Sequencing</b>, put <b class="blk">count step from 1 to 16, then again</b> inside it. Each
+    quarter beat, <code>step</code> goes up by one, back to 1 after 16.</li>
+  <li><b>A melody.</b> From <b>Sound</b>, put <b class="blk">play note &hellip; velocity 100 for 0.5 beats</b> under the counter.
+    Into its note slot drop <b class="blk">step &hellip; of 60 . 63 67 . 70 67 63 . 60 . 58 . 55 . .</b> (Sequencing) and
+    into that one's first slot the variable <b class="blk">step</b> (Variables). The text is the melody: note numbers with
+    spaces between them, 60 is middle C (C3 on norns), a dot is a rest.</li>
+  <li><b>An encoder.</b> From <b>Events</b>, drag <b class="blk">when encoder E2 turns</b>; put
+    <b class="blk">change control cutoff by turn amount &times; 40</b> into it (Controls, Math).</li>
+  <li><b>The control moves the sound.</b> From <b>Controls</b>, drag <b class="blk">when control cutoff changes</b>, and put
+    <b class="blk">set sound filter1 cutoff to new value</b> (Sound) into it.</li>
+</ol>
+<figure><img src="builder/blocks.jpg" alt="the blocks of glow"><figcaption>the blocks of glow. The preview on the right plays it silently; the notes show under the screen.</figcaption></figure>
+<p class="note">A block that is in the wrong place gets a yellow warning (for example <b class="blk">turn amount</b> outside
+<b class="blk">when encoder &hellip; turns</b>). A block outside every event block is greyed out: it never runs. Hover over a
+block for what it does.</p>
+
+<h2 id="sound">5. tutorial 2: the sound</h2>
+<p>Click <b>sound</b> at the top. This page is the instrument your notes play. Every note gets a <b>voice</b> of its own:
+the <b>voice</b> module gives each one its pitch, its gate (held or not) and its velocity; whatever reaches <b>output</b> is
+heard, through the effects on the right. Up to 16 voices play at once; <b>mode</b> mono or legato plays one at a time, with
+<b>glide</b>.</p>
+<ol class="steps">
+  <li>A new script starts with <b>pluck</b>: a saw (oscillator) through a filter and an amp, both moved by an envelope.
+    The <b>preset&hellip;</b> menu has more: pad, bass, bell, string, drone, kick, choir, sampler, acid, bleeps.</li>
+  <li><b>Add a module.</b> Click <b>+ lfo</b> (modulators). An LFO is a slow wave.</li>
+  <li><b>Plug a cable.</b> Drag from the round jack <b>out</b> on the right of the LFO to <b>mod</b> on the left of the filter.
+    The filter now opens and closes by itself. Click a cable to remove it. Cables go from an output to an input; an input
+    can take several (they add up). A cable that would make a loop is refused.</li>
+  <li><b>Turn knobs.</b> LFO <b>rate</b> 0.25 Hz, <b>depth</b> 0.4. Double-click a slider: back to its default.</li>
+  <li><b>An effect.</b> Under <b>add effect</b>, click <b>+ delay</b>; the arrows move an effect up or down the chain.</li>
+</ol>
+<figure><img src="builder/sound.jpg" alt="the sound page"><figcaption>the sound page of glow: the voice, oscillator, filter, envelope, amp and the LFO on the filter; delay and reverb on the right; the keyboard at the bottom.</figcaption></figure>
+<p>Every knob is also a control: PARAMETERS &gt; sound on the norns, mappable to MIDI, and in the blocks
+<b class="blk">set sound &hellip; to</b>, <b class="blk">change sound &hellip; by</b> and <b class="blk">sound &hellip;</b> reach it. While
+the script runs in Verdandi, the knobs and the keyboard at the bottom play <b>live</b>; changing a cable starts the
+script again by itself.</p>
+
+<h2 id="screen">6. tutorial 3: the screen</h2>
+<p>Click <b>screen</b> at the top. The big screen shows exactly what the norns will show, live. Add elements with the
+buttons at the top; click one to select it, drag it to move it, drag its corners to resize it, arrow keys move it a pixel
+(shift: 8). The layer list on the right puts one over another; its eye hides one.</p>
+<ol class="steps">
+  <li><b>stars</b> (moving): a starfield behind everything.</li>
+  <li><b>rings on notes</b>: every note sends a ring out. <b>test note</b> shows one without playing.</li>
+  <li><b>text</b> with <code>{note}</code>: the name of the note just played. In the properties, set <b>size</b> to move
+    <b>on each note</b>, from 14 to 22: the name jumps with every note and shrinks back.</li>
+  <li><b>wave</b>: set its <b>height</b> to move <b>with the sound level</b>.</li>
+  <li><b>meter</b>: its <b>value</b> moves <b>with a control</b>: <code>cutoff</code>. Turn E2: the bar follows.</li>
+</ol>
+<figure><img src="builder/screen.jpg" alt="the screen page"><figcaption>the screen page of glow, the note name selected: its size moves on each note, from 14 to 22, back in 0.4 s.</figcaption></figure>
+<p>Any number of an element can be <b>fixed</b> or move: <b>with the beat</b> (smooth, triangle, saw, square, random steps;
+every so many beats), <b>over time</b> (the same in seconds), <b>on each note</b>, <b>with the sound level</b>, <b>with a
+control</b>, or <b>with a looper's playhead</b>. Text shows live values in braces: <code>{note}</code>, <code>{tempo}</code>,
+<code>{beat}</code>, <code>{page}</code>, <code>{step}</code> (any variable of the blocks) and <code>{cutoff}</code> (any control).
+Blocks under <b>Screen</b> change pages, hide and show elements and set their values; draw on top of the design with
+<b class="blk">draw the screen</b>.</p>
+
+<h2 id="run">7. tutorial 4: run it in Verdandi</h2>
+<ol class="steps">
+  <li>Type a <b>name</b> at the top: <code>glow</code> (letters, numbers, <code>_</code>).</li>
+  <li>Press <b>run</b>. The builder saves the script and starts it in Verdandi: you hear it, and the norns screen shows it.
+    The <b>console</b> shows what norns says (errors in red).</li>
+  <li>Turn E2 in Verdandi (or on a MIDI controller mapped to <code>cutoff</code>): the filter and the meter follow.</li>
+  <li>On the sound page, the knobs and keyboard now play live. <b>stop</b> ends the script.</li>
+</ol>
+<figure><img src="builder/verdandi.jpg" alt="glow running in Verdandi"><figcaption>glow running in Verdandi: the screen design on the norns screen, E2 on the filter and the meter.</figcaption></figure>
+<p class="note">The dot next to <b>norns</b> at the top right is green when the builder reaches Verdandi. Red: start Verdandi
+(or restart it), the builder connects again by itself.</p>
+
+<h2 id="files">8. saving, opening, files</h2>
+<ul>
+  <li><b>save</b> (<kbd>&#8984;S</kbd>) writes <code>code/&lt;name&gt;/&lt;name&gt;.lua</code> and <code>&lt;name&gt;.blocks.json</code> through
+    maiden. <b>run</b> (<kbd>&#8984;&#8617;</kbd>) saves first. maiden shows them under <code>code</code>; on the norns they are in
+    SELECT like any script.</li>
+  <li>The builder never writes into a folder it did not make: a name taken by another script is refused.</li>
+  <li><b>open</b> lists the scripts made here and the examples (first_steps, pulse, looper, drums, grid_keys, glow, visuals).</li>
+  <li>Your blocks are also kept in the browser as you work: closing the page loses nothing; it opens with them again.</li>
+  <li>The <code>.lua</code> is written again on every save: change the blocks, not the text. To go on in Lua, copy it to a
+    folder of its own and edit it in maiden.</li>
+</ul>
+
+<h2 id="norns">9. taking a script to a norns</h2>
+<p>A script from the builder runs on any norns. Copy its folder <code>code/&lt;name&gt;</code> to the norns like any script
+(maiden on the norns, or SMB/SFTP to <code>dust/code</code>). A script with a sound needs the Weave engine on that norns, once:
+copy <code>Engine_Weave.sc</code> and <code>WeaveGraph.sc</code> (in Verdandi: <code>norns/sc/engines/</code>) to
+<code>dust/code/weave/lib/</code> on the norns, then SYSTEM &gt; RESTART. Verdandi has Weave built in.</p>
+
+<h2 id="tips">10. tips and trouble</h2>
+<table>
+  <tr><th>what</th><th>why, and what helps</th></tr>
+  <tr><td>no sound in the preview</td><td>the preview is silent on purpose; <b>run</b> plays it in Verdandi.</td></tr>
+  <tr><td>"norns is not reachable"</td><td>Verdandi is not running, or maiden is open as <code>localhost</code>: use <code>127.0.0.1</code>.</td></tr>
+  <tr><td>"ran without pausing for too long"</td><td>a loop never waits: put <b class="blk">wait</b> in it, or use <b class="blk">every &hellip;</b>.</td></tr>
+  <tr><td>a block is greyed out</td><td>it is outside every event block: it never runs.</td></tr>
+  <tr><td>a yellow warning on a block</td><td>it is somewhere it cannot work (hover over the warning).</td></tr>
+  <tr><td>"sound &hellip; is not on the sound page any more"</td><td>its module was removed: pick another knob in the block.</td></tr>
+  <tr><td>"no control &hellip;"</td><td>add the control in <b class="blk">when the script starts</b> before using it.</td></tr>
+  <tr><td>a looper records nothing</td><td>it records the audio input: check SYSTEM &gt; AUDIO and the microphone permission.</td></tr>
+</table>
+
+<h2 id="ref-blocks">11. reference: blocks</h2>
+<p class="small">every block of the toolbox, by group. <code>( )</code> is a slot for a value, <code>[&hellip;]</code> a choice or a field.
+Logic, loops, math, text, lists, variables and functions are Blockly's own.</p>
+<!-- begin:blocks -->
+<h3>Events</h3>
+<table>
+<tr><th>block</th><th>what it does</th></tr>
+<tr><td class="blockname">when the script starts</td><td>runs once when the script loads: set things up here</td></tr>
+<tr><td class="blockname">every [1/4 beat]</td><td>repeats in time with the norns clock (tempo in PARAMETERS &gt; CLOCK)</td></tr>
+<tr><td class="blockname">when key [K2] is [pressed]</td><td>runs when a key of the norns is pressed or released</td></tr>
+<tr><td class="blockname">when encoder [E2] turns</td><td>runs on every step of an encoder; "turn amount" is +1 or -1 (more when turned fast)</td></tr>
+<tr><td class="blockname">turn amount</td><td>how far the encoder turned: positive clockwise, negative counter-clockwise</td></tr>
+<tr><td class="blockname">draw the screen</td><td>draws the 128 x 64 screen, 15 times a second; it is cleared before each drawing</td></tr>
+</table>
+<h3>Sound</h3>
+<table>
+<tr><th>block</th><th>what it does</th></tr>
+<tr><td class="blockname">play note <code>( )</code> velocity <code>( )</code> for <code>( )</code> beats</td><td>a MIDI note number (60 is middle C), velocity 0 to 127; nothing plays when the note is empty (a rest)</td></tr>
+<tr><td class="blockname">play frequency <code>( )</code> Hz velocity <code>( )</code> for <code>( )</code> beats</td><td></td></tr>
+<tr><td class="blockname">start note <code>( )</code> velocity <code>( )</code></td><td>the note sounds until "stop note" with the same number: for keys held down</td></tr>
+<tr><td class="blockname">stop note <code>( )</code></td><td></td></tr>
+<tr><td class="blockname">stop all notes</td><td></td></tr>
+<tr><td class="blockname">set sound […] to <code>( )</code></td><td>any knob of the sound page; it is also in PARAMETERS &gt; sound</td></tr>
+<tr><td class="blockname">change sound […] by <code>( )</code></td><td>adds to a knob, kept inside its range: "change sound filter1 cutoff by turn amount x 50"</td></tr>
+<tr><td class="blockname">sound […]</td><td></td></tr>
+<tr><td class="blockname">play MIDI notes with the sound</td><td>notes from the MIDI device in slot 1 play the sound, with their velocity</td></tr>
+<tr><td class="blockname">load sound file [my_sound.wav] into sample slot <code>( )</code></td><td>a file in dust/audio (or a full path) for the sample module of the sound page</td></tr>
+<tr><td class="blockname">voices sounding</td><td>how many notes sound right now (held or ringing out)</td></tr>
+</table>
+<h3>Music</h3>
+<table>
+<tr><th>block</th><th>what it does</th></tr>
+<tr><td class="blockname">note <code>( )</code> of scale [Major] from <code>( )</code></td><td>step 1 is the root note; higher steps climb the scale through the octaves</td></tr>
+<tr><td class="blockname">name of note <code>( )</code></td><td>for example 60 gives C4</td></tr>
+<tr><td class="blockname">sequence of <code>( )</code></td><td>a sequins: store it in a variable, then take "next from" it</td></tr>
+<tr><td class="blockname">next from [melody]</td><td>the next value of a sequence; after the last one it starts over</td></tr>
+</table>
+<h3>Sequencing</h3>
+<table>
+<tr><th>block</th><th>what it does</th></tr>
+<tr><td class="blockname">count [step] from 1 to <code>( )</code>, then again</td><td>adds 1 each time, back to 1 after the last: the step of a sequence</td></tr>
+<tr><td class="blockname">step <code>( )</code> of rhythm [x..x..x.x...x...] is a hit</td><td>x (or any letter) is a hit, a dot a rest; after the last step it starts over</td></tr>
+<tr><td class="blockname">step <code>( )</code> of [60 . 63 67 . 70 67 63]</td><td>numbers with spaces between them; a dot is a rest: "play note" plays nothing then</td></tr>
+<tr><td class="blockname">step <code>( )</code> of <code>( )</code> hits in <code>( )</code> steps, shifted by <code>( )</code>, is a hit</td><td>a euclidean rhythm: the hits as evenly spread as they can be (3 in 8 is the tresillo)</td></tr>
+<tr><td class="blockname">chance of <code>( )</code> percent</td><td>true that often, at random: 50 is a coin toss</td></tr>
+<tr><td class="blockname">every <code>( )</code>. time this runs</td><td>true the first time, then every n-th time</td></tr>
+<tr><td class="blockname">notes of the [Major] chord on <code>( )</code></td><td>a list of note numbers, the root first</td></tr>
+<tr><td class="blockname">note <code>( )</code> of <code>( )</code> going [up]</td><td>an arpeggio: step 1, 2, 3 ... walks through the notes</td></tr>
+<tr><td class="blockname"><code>( )</code> snapped to [Major] on <code>( )</code></td><td>the nearest note of the scale: any number becomes a note that fits</td></tr>
+</table>
+<h3>Time</h3>
+<table>
+<tr><th>block</th><th>what it does</th></tr>
+<tr><td class="blockname">wait <code>( )</code> beats</td><td>only inside "every ..." blocks</td></tr>
+<tr><td class="blockname">set tempo to <code>( )</code> BPM</td><td></td></tr>
+<tr><td class="blockname">tempo (BPM)</td><td></td></tr>
+</table>
+<h3>Looper</h3>
+<table>
+<tr><th>block</th><th>what it does</th></tr>
+<tr><td class="blockname">set up looper [1] for loops up to [30] seconds, recording [the audio input]</td><td>a looper on a softcut voice; set it up in "when the script starts"</td></tr>
+<tr><td class="blockname">looper [1]: [record a new loop]</td><td>record, then finish: the time in between is the loop. overdub records on top while it plays</td></tr>
+<tr><td class="blockname">looper [1] [speed (1 normal, -1 backwards)] <code>( )</code></td><td>speed 2 is an octave up, 0.5 an octave down, -1 backwards. a length in beats makes every recording that long</td></tr>
+<tr><td class="blockname">looper [1] jump to <code>( )</code> (0 start, 1 end)</td><td></td></tr>
+<tr><td class="blockname">load sound file [my_loop.wav] into looper [1]</td><td>a file in dust/audio (or a full path); it plays at once, as long as the looper allows</td></tr>
+<tr><td class="blockname">position of looper [1] (0 to 1)</td><td></td></tr>
+<tr><td class="blockname">length of looper [1] (seconds)</td><td></td></tr>
+<tr><td class="blockname">looper [1] is [recording]</td><td></td></tr>
+<tr><td class="blockname">waveform of looper [1] at x <code>( )</code> y <code>( )</code> width <code>( )</code> height <code>( )</code></td><td>the loop as a picture, with the playhead</td></tr>
+</table>
+<h3>MIDI</h3>
+<table>
+<tr><th>block</th><th>what it does</th></tr>
+<tr><td class="blockname">when a MIDI note [starts] arrives</td><td>notes from the MIDI device in slot 1 (SYSTEM &gt; DEVICES &gt; MIDI)</td></tr>
+<tr><td class="blockname">MIDI note number</td><td></td></tr>
+<tr><td class="blockname">MIDI velocity</td><td></td></tr>
+<tr><td class="blockname">send MIDI note <code>( )</code> velocity <code>( )</code> for <code>( )</code> beats on channel <code>( )</code></td><td>to the MIDI device in slot 1; the note ends by itself</td></tr>
+<tr><td class="blockname">when MIDI CC [1] changes</td><td>a knob of a MIDI controller (device slot 1); "CC value" is 0 to 127</td></tr>
+<tr><td class="blockname">CC value</td><td></td></tr>
+<tr><td class="blockname">send MIDI CC <code>( )</code> value <code>( )</code> on channel <code>( )</code></td><td></td></tr>
+</table>
+<h3>Grid</h3>
+<table>
+<tr><th>block</th><th>what it does</th></tr>
+<tr><td class="blockname">when a grid key is [pressed]</td><td>"grid x" (1 to 16, left to right) and "grid y" (1 to 8, top down) say which</td></tr>
+<tr><td class="blockname">grid x</td><td></td></tr>
+<tr><td class="blockname">grid y</td><td></td></tr>
+<tr><td class="blockname">grid key x <code>( )</code> y <code>( )</code> is held</td><td></td></tr>
+<tr><td class="blockname">draw the grid</td><td>30 times a second, all lights off first: light what should be lit</td></tr>
+<tr><td class="blockname">light grid x <code>( )</code> y <code>( )</code> brightness <code>( )</code></td><td>brightness 0 (off) to 15</td></tr>
+<tr><td class="blockname">when arc ring [1] turns</td><td>"arc turn amount" says how far, positive clockwise</td></tr>
+<tr><td class="blockname">arc turn amount</td><td></td></tr>
+<tr><td class="blockname">draw the arc</td><td></td></tr>
+<tr><td class="blockname">light arc ring [1] light <code>( )</code> brightness <code>( )</code></td><td>64 lights per ring, 1 at the top</td></tr>
+<tr><td class="blockname">light arc ring [1] from <code>( )</code> to <code>( )</code> (0 to 1) brightness <code>( )</code></td><td>a stretch of the ring: from 0 to the value of a control draws a meter</td></tr>
+</table>
+<h3>Screen</h3>
+<table>
+<tr><th>block</th><th>what it does</th></tr>
+<tr><td class="blockname">write <code>( )</code> at x <code>( )</code> y <code>( )</code> brightness <code>( )</code> [from the left]</td><td>x 0 to 127, y 0 to 63 (y is the bottom of the letters), brightness 0 to 15</td></tr>
+<tr><td class="blockname">[filled] rectangle at x <code>( )</code> y <code>( )</code> width <code>( )</code> height <code>( )</code> brightness <code>( )</code></td><td></td></tr>
+<tr><td class="blockname">[filled] circle at x <code>( )</code> y <code>( )</code> radius <code>( )</code> brightness <code>( )</code></td><td></td></tr>
+<tr><td class="blockname">line from x <code>( )</code> y <code>( )</code> to x <code>( )</code> y <code>( )</code> brightness <code>( )</code></td><td></td></tr>
+<tr><td class="blockname">pixel at x <code>( )</code> y <code>( )</code> brightness <code>( )</code></td><td></td></tr>
+<tr><td class="blockname">text size <code>( )</code></td><td>for the "write" blocks after it; 8 is the norns size</td></tr>
+<tr><td class="blockname">frame number</td><td>counts up with every drawing (15 a second): use it to move things</td></tr>
+<tr><td class="blockname">beats since start</td><td>the clock position in beats: animations that move with the tempo</td></tr>
+<tr><td class="blockname">show page <code>( )</code> of the screen design</td><td>elements on page 0 always show; the others only on their page</td></tr>
+<tr><td class="blockname">screen design page</td><td></td></tr>
+<tr><td class="blockname">set screen element […] […] to <code>( )</code></td><td>the script decides this value now (it stops moving by itself)</td></tr>
+<tr><td class="blockname">let screen element […] […] move by itself again</td><td></td></tr>
+<tr><td class="blockname">[show] screen element […]</td><td></td></tr>
+<tr><td class="blockname">set off the note animations</td><td>what moves "on each note" moves now, as if a note played</td></tr>
+</table>
+<h3>Widgets</h3>
+<table>
+<tr><th>block</th><th>what it does</th></tr>
+<tr><td class="blockname">dial for control [cutoff] at x <code>( )</code> y <code>( )</code> size <code>( )</code></td><td>the norns dial, with the control's name and value</td></tr>
+<tr><td class="blockname">[upright] slider for control [cutoff] at x <code>( )</code> y <code>( )</code> width <code>( )</code> height <code>( )</code></td><td></td></tr>
+<tr><td class="blockname">play symbol at x <code>( )</code> y <code>( )</code> size <code>( )</code> showing <code>( )</code></td><td>a play triangle when the value is true, a stop square when it is false</td></tr>
+<tr><td class="blockname">page dots: page <code>( )</code> of <code>( )</code></td><td>the dots on the right that show which page is on (keep the page in a variable, change it with E1)</td></tr>
+<tr><td class="blockname">tabs [play, sound, loop] showing tab <code>( )</code></td><td>tab names with commas between them, across the top</td></tr>
+<tr><td class="blockname">list [one, two, three, four] at x <code>( )</code> y <code>( )</code> with item <code>( )</code> picked</td><td>a scrolling list, the picked item bright</td></tr>
+</table>
+<h3>Controls</h3>
+<table>
+<tr><th>block</th><th>what it does</th></tr>
+<tr><td class="blockname">add control [cutoff] from [0] to [100] starting at [50]</td><td>a parameter in the PARAMETERS menu; it can be mapped to MIDI and saved in PSETs. add controls in "when the script starts"</td></tr>
+<tr><td class="blockname">control [cutoff]</td><td></td></tr>
+<tr><td class="blockname">set control [cutoff] to <code>( )</code></td><td></td></tr>
+<tr><td class="blockname">change control [cutoff] by <code>( )</code></td><td>adds to a control, kept inside its range: "change control cutoff by turn amount"</td></tr>
+<tr><td class="blockname">add choice [mode] with [up, down, random] starting at [1]</td><td>a control that picks one of these (commas between them); "control mode" is its number, 1 for the first</td></tr>
+<tr><td class="blockname">add switch [hold] starting [off]</td><td>on (1) or off (0); MIDI mappable</td></tr>
+<tr><td class="blockname">shown value of control [mode]</td><td>what PARAMETERS shows: the name of a choice, a value with its unit</td></tr>
+<tr><td class="blockname">when control [cutoff] changes</td><td>from an encoder, MIDI, an LFO or a block: "new value" is what it is now</td></tr>
+<tr><td class="blockname">new value</td><td></td></tr>
+<tr><td class="blockname">LFO moves control [cutoff] from <code>( )</code> to <code>( )</code> every <code>( )</code> beats, [smoothly]</td><td>any control, sound knobs too (control "filter1 cutoff"); in time with the clock</td></tr>
+</table>
+<h3>Data</h3>
+<table>
+<tr><th>block</th><th>what it does</th></tr>
+<tr><td class="blockname">remember <code>( )</code> as [pattern]</td><td>kept in the script's data folder: still there the next time the script runs</td></tr>
+<tr><td class="blockname">remembered [pattern], else <code>( )</code></td><td></td></tr>
+</table>
+<!-- end:blocks -->
+
+<h2 id="ref-sound">12. reference: sound modules and effects</h2>
+<!-- begin:sound -->
+<p class="small">every module of the sound page; its knobs are its params. option params are choices.</p>
+<h3>always there</h3>
+<table>
+<tr><th>module</th><th>what it does</th><th>in / out</th><th>knobs</th></tr>
+<tr><td><b>voice</b></td><td>what each played note gives the patch: its pitch, its gate (held or not), its velocity and a random number of its own</td><td>&ndash; / pitch (Hz), gate, velocity, random</td><td>voices, mode (poly, mono, legato), glide, bend</td></tr>
+<tr><td><b>output</b></td><td>where the sound of a voice leaves the patch, into the effects</td><td>in, pan / &ndash;</td><td>level, pan, spread</td></tr>
+</table>
+<h3>sources</h3>
+<table>
+<tr><th>module</th><th>what it does</th><th>in / out</th><th>knobs</th></tr>
+<tr><td><b>oscillator</b></td><td>sine, triangle, saw or square; fm bends its pitch by the fm input</td><td>pitch, fm, pwm / out</td><td>wave (sine, triangle, saw, square), tune, fine, width, fm depth, level</td></tr>
+<tr><td><b>supersaw</b></td><td>seven detuned saws: big leads and pads</td><td>pitch / out</td><td>tune, detune, level</td></tr>
+<tr><td><b>fm operator</b></td><td>a sine at a ratio of the pitch; another operator into pm makes bells and keys</td><td>pitch, pm / out</td><td>ratio, fine, pm depth, level</td></tr>
+<tr><td><b>noise</b></td><td>white, pink or brown noise</td><td>&ndash; / out</td><td>color (white, pink, brown), level</td></tr>
+<tr><td><b>string</b></td><td>a plucked string (Karplus-Strong), struck by the gate</td><td>pitch, strike / out</td><td>decay, damp, level</td></tr>
+<tr><td><b>vowel</b></td><td>a voice-like tone that sings a, e, i, o, u (in between too)</td><td>pitch, vowel / out</td><td>vowel, level</td></tr>
+<tr><td><b>sample</b></td><td>plays a sound file loaded into a slot (the "load sample" block), at the pitch of the note</td><td>pitch, start / out</td><td>slot, start, end, loop (off, on), follow pitch, level</td></tr>
+</table>
+<h3>shapers</h3>
+<table>
+<tr><th>module</th><th>what it does</th><th>in / out</th><th>knobs</th></tr>
+<tr><td><b>filter</b></td><td>lowpass, highpass, bandpass or notch; mod moves the cutoff in octaves</td><td>in, mod, key / out</td><td>type (lowpass, highpass, bandpass, notch), cutoff, resonance, mod depth, key follow</td></tr>
+<tr><td><b>amp</b></td><td>the in signal, as loud as the cv input says (an envelope, usually)</td><td>in, cv / out</td><td>level</td></tr>
+<tr><td><b>mixer</b></td><td>four inputs into one</td><td>in 1, in 2, in 3, in 4 / out</td><td>level 1, level 2, level 3, level 4</td></tr>
+<tr><td><b>drive</b></td><td>soft saturation, wavefolding or hard clipping</td><td>in, mod / out</td><td>type (saturate, fold, clip), amount, level</td></tr>
+<tr><td><b>bitcrush</b></td><td>fewer bits and a lower sample rate: lo-fi</td><td>in / out</td><td>bits, rate</td></tr>
+<tr><td><b>resonator</b></td><td>a tuned comb: rings the in signal at the note's pitch (try noise in)</td><td>in, pitch / out</td><td>tune, decay, level</td></tr>
+<tr><td><b>ring mod</b></td><td>a times b</td><td>a, b / out</td><td></td></tr>
+<tr><td><b>slew</b></td><td>smooths changes: steps become glides</td><td>in / out</td><td>time</td></tr>
+<tr><td><b>scale + offset</b></td><td>in times amount, plus offset: turn a modulation up, down or upside down</td><td>in / out</td><td>amount, offset</td></tr>
+</table>
+<h3>modulators</h3>
+<table>
+<tr><th>module</th><th>what it does</th><th>in / out</th><th>knobs</th></tr>
+<tr><td><b>envelope</b></td><td>attack, decay, sustain, release while the gate is held; 0 to 1</td><td>gate / out</td><td>attack, decay, sustain, release, curve, velocity</td></tr>
+<tr><td><b>lfo</b></td><td>a slow wave, -1 to 1, started with each note</td><td>rate mod / out</td><td>wave (sine, triangle, saw, square, random), rate, depth</td></tr>
+<tr><td><b>sample + hold</b></td><td>holds a new random value (or the in signal) at each tick: random steps</td><td>in / out</td><td>rate</td></tr>
+<tr><td><b>drift</b></td><td>wanders slowly and smoothly, -1 to 1: life for pads and tuning</td><td>&ndash; / out</td><td>rate, depth</td></tr>
+</table>
+<h3>effects</h3>
+<table>
+<tr><th>effect</th><th>what it does</th><th>knobs</th></tr>
+<tr><td><b>main</b></td><td>the line input into the effects, and the level of everything</td><td>line in, level</td></tr>
+<tr><td><b>filter</b></td><td>a filter over everything</td><td>type (lowpass, highpass), cutoff, resonance</td></tr>
+<tr><td><b>drive</b></td><td>saturation over everything</td><td>amount, mix</td></tr>
+<tr><td><b>bitcrush</b></td><td>lo-fi over everything</td><td>bits, rate, mix</td></tr>
+<tr><td><b>tape</b></td><td>wow, flutter and tape saturation</td><td>wow, flutter, saturation</td></tr>
+<tr><td><b>chorus</b></td><td>a slowly moving copy next to the sound</td><td>rate, depth, mix</td></tr>
+<tr><td><b>phaser</b></td><td>sweeping notches</td><td>rate, depth, mix</td></tr>
+<tr><td><b>pitch shift</b></td><td>a copy shifted up or down (octaves, fifths)</td><td>shift, mix</td></tr>
+<tr><td><b>grains</b></td><td>scatters the sound into a cloud of small grains</td><td>density, size, mix</td></tr>
+<tr><td><b>delay</b></td><td>echoes; spread puts the right side later</td><td>time, feedback, tone, spread, mix</td></tr>
+<tr><td><b>reverb</b></td><td>a room to a hall</td><td>size, damp, mix</td></tr>
+<tr><td><b>compressor</b></td><td>evens out the level: punch, or glue</td><td>threshold, ratio, makeup</td></tr>
+<tr><td><b>width</b></td><td>narrower (0) or wider (2) stereo</td><td>width</td></tr>
+</table>
+<!-- end:sound -->
+
+<h2 id="ref-screen">13. reference: screen elements</h2>
+<!-- begin:screen -->
+<table>
+<tr><th>element</th><th>what it draws</th><th>properties</th></tr>
+<tr><td><b>text</b> <span class="small">(shapes)</span></td><td>words; {tempo}, {note}, {beat}, {step}, {page} and {control name} show live values</td><td>text, x, y, size, brightness, align (left, centre, right), page</td></tr>
+<tr><td><b>rectangle</b> <span class="small">(shapes)</span></td><td>a box, filled or outlined</td><td>x, y, width, height, brightness, drawn (filled, outlined), page</td></tr>
+<tr><td><b>circle</b> <span class="small">(shapes)</span></td><td>a circle, filled or outlined</td><td>x, y, radius, brightness, drawn (filled, outlined), page</td></tr>
+<tr><td><b>line</b> <span class="small">(shapes)</span></td><td>a line from one point to another</td><td>from x, from y, to x, to y, thickness, brightness, page</td></tr>
+<tr><td><b>arc</b> <span class="small">(shapes)</span></td><td>part of a ring: from 0 (the top) round to 1</td><td>x, y, radius, from, to, thickness, brightness, page</td></tr>
+<tr><td><b>meter</b> <span class="small">(values)</span></td><td>a bar filled as far as its value (0 to 1): give it a control, the sound level or the beat</td><td>x, y, width, height, value, brightness, direction (across, up), page</td></tr>
+<tr><td><b>dial</b> <span class="small">(values)</span></td><td>the norns dial of a control, with its name and value</td><td>control, x, y, size, page</td></tr>
+<tr><td><b>slider</b> <span class="small">(values)</span></td><td>the norns slider of a control</td><td>control, x, y, width, height, direction (up, across), page</td></tr>
+<tr><td><b>looper wave</b> <span class="small">(values)</span></td><td>the loop of a looper (set up in the blocks), with its playhead</td><td>looper, x, y, width, height, page</td></tr>
+<tr><td><b>steps</b> <span class="small">(values)</span></td><td>a row of steps, the current one bright: the counter of a sequence (a variable of the blocks)</td><td>step variable, steps, x, y, width, height, brightness, page</td></tr>
+<tr><td><b>rings on notes</b> <span class="small">(moving)</span></td><td>every note sends a ring out from the centre, fading as it grows</td><td>x, y, reach, lasts, brightness, page</td></tr>
+<tr><td><b>sparks on notes</b> <span class="small">(moving)</span></td><td>every note throws sparks that fall and fade</td><td>x, y, spread, sparks, gravity, brightness, page</td></tr>
+<tr><td><b>orbit</b> <span class="small">(moving)</span></td><td>dots going round, once every so many beats</td><td>x, y, radius, dots, round in, dot size, brightness, page</td></tr>
+<tr><td><b>wave</b> <span class="small">(moving)</span></td><td>a sine line across the screen, flowing with the beat</td><td>y, height, waves, flows in, brightness, page</td></tr>
+<tr><td><b>spiral</b> <span class="small">(moving)</span></td><td>a turning spiral</td><td>x, y, size, turns, turns in, brightness, page</td></tr>
+<tr><td><b>lissajous</b> <span class="small">(moving)</span></td><td>the figure two waves draw together, slowly turning</td><td>x, y, width, height, across, up, turns in, brightness, page</td></tr>
+<tr><td><b>stars</b> <span class="small">(moving)</span></td><td>flying through stars</td><td>stars, speed, brightness, page</td></tr>
+<tr><td><b>rain</b> <span class="small">(moving)</span></td><td>falling drops</td><td>drops, speed, length, brightness, page</td></tr>
+<tr><td><b>snow</b> <span class="small">(moving)</span></td><td>flickering pixels, like an old screen</td><td>x, y, width, height, density, brightness, page</td></tr>
+<tr><td><b>bouncing ball</b> <span class="small">(moving)</span></td><td>a ball bouncing off the edges</td><td>size, speed, brightness, page</td></tr>
+</table>
+<h3>how a number moves</h3>
+<table>
+<tr><th>moves</th><th>how</th><th>settings</th></tr>
+<tr><td><b>with the beat</b></td><td>goes from "from" to "to" and back, in time with the clock</td><td>from, to, every, shape (sine, triangle, saw, square, random)</td></tr>
+<tr><td><b>over time</b></td><td>the same, in seconds, whatever the tempo</td><td>from, to, every, shape (sine, triangle, saw, square, random)</td></tr>
+<tr><td><b>on each note</b></td><td>jumps to "to" when a note plays, then glides back to "from"</td><td>from, to, back in</td></tr>
+<tr><td><b>with the sound level</b></td><td>"from" when silent, "to" when loud</td><td>from, to</td></tr>
+<tr><td><b>with a control</b></td><td>"from" at the control's lowest, "to" at its highest</td><td>from, to, control</td></tr>
+<tr><td><b>with a looper's playhead</b></td><td>"from" at the start of the loop, "to" at its end</td><td>from, to, looper</td></tr>
+</table>
+<!-- end:screen -->
+
+</body>
+</html>

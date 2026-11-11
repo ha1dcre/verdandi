@@ -1,0 +1,275 @@
+{
+ "format": "verdandi-blocks",
+ "version": 2,
+ "name": "glow",
+ "workspace": {
+  "variables": [
+   {
+    "name": "step",
+    "id": "v_step"
+   }
+  ],
+  "blocks": {
+   "languageVersion": 0,
+   "blocks": [
+    {
+     "type": "nv_init",
+     "x": 20,
+     "y": 20,
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_param_add",
+        "fields": {
+         "NAME": "cutoff",
+         "MIN": 200,
+         "MAX": 4000,
+         "DEFAULT": 1200
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_every",
+     "x": 20,
+     "y": 120,
+     "fields": {
+      "DIV": "1/4"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_counter",
+        "fields": {
+         "VAR": {
+          "id": "v_step"
+         }
+        },
+        "inputs": {
+         "N": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 16
+           }
+          }
+         }
+        },
+        "next": {
+         "block": {
+          "type": "nv_play_note",
+          "inputs": {
+           "NOTE": {
+            "block": {
+             "type": "nv_pattern_value",
+             "fields": {
+              "TEXT": "60 . 63 67 . 70 67 63 . 60 . 58 . 55 . ."
+             },
+             "inputs": {
+              "STEP": {
+               "block": {
+                "type": "variables_get",
+                "fields": {
+                 "VAR": {
+                  "id": "v_step"
+                 }
+                }
+               }
+              }
+             }
+            }
+           },
+           "VEL": {
+            "shadow": {
+             "type": "math_number",
+             "fields": {
+              "NUM": 100
+             }
+            }
+           },
+           "LEN": {
+            "shadow": {
+             "type": "math_number",
+             "fields": {
+              "NUM": 0.5
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_enc",
+     "x": 20,
+     "y": 300,
+     "fields": {
+      "ENC": "2"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_param_change",
+        "fields": {
+         "NAME": "cutoff"
+        },
+        "inputs": {
+         "DELTA": {
+          "block": {
+           "type": "math_arithmetic",
+           "fields": {
+            "OP": "MULTIPLY"
+           },
+           "inputs": {
+            "A": {
+             "block": {
+              "type": "nv_enc_delta"
+             }
+            },
+            "B": {
+             "shadow": {
+              "type": "math_number",
+              "fields": {
+               "NUM": 40
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_param_changed",
+     "x": 20,
+     "y": 400,
+     "fields": {
+      "NAME": "cutoff"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_sound_set",
+        "fields": {
+         "KEY": "filter1.cutoff"
+        },
+        "inputs": {
+         "VALUE": {
+          "block": {
+           "type": "nv_param_value"
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   ]
+  }
+ },
+ "patch": {
+  "enabled": true,
+  "modules": [
+   {
+    "id": "voice",
+    "type": "voice",
+    "x": 20,
+    "y": 30,
+    "params": {}
+   },
+   {
+    "id": "osc1",
+    "type": "osc",
+    "x": 250,
+    "y": 30,
+    "params": {
+     "wave": 2
+    }
+   },
+   {
+    "id": "env1",
+    "type": "env",
+    "x": 250,
+    "y": 330,
+    "params": {
+     "a": 0.002,
+     "d": 0.4,
+     "s": 0.2,
+     "r": 0.4
+    }
+   },
+   {
+    "id": "filter1",
+    "type": "filter",
+    "x": 480,
+    "y": 30,
+    "params": {
+     "cutoff": 900,
+     "mod": 3,
+     "track": 0.3
+    }
+   },
+   {
+    "id": "vca1",
+    "type": "vca",
+    "x": 710,
+    "y": 30,
+    "params": {}
+   },
+   {
+    "id": "out",
+    "type": "out",
+    "x": 940,
+    "y": 30,
+    "params": {
+     "level": 0.5
+    }
+   }
+  ],
+  "cables": [
+   {
+    "from": "osc1.out",
+    "to": "filter1.in"
+   },
+   {
+    "from": "env1.out",
+    "to": "filter1.mod"
+   },
+   {
+    "from": "filter1.out",
+    "to": "vca1.in"
+   },
+   {
+    "from": "env1.out",
+    "to": "vca1.cv"
+   },
+   {
+    "from": "vca1.out",
+    "to": "out.in"
+   }
+  ],
+  "fx": [
+   {
+    "id": "reverb1",
+    "type": "fx_reverb",
+    "params": {
+     "mix": 0.2
+    }
+   }
+  ],
+  "main": {
+   "input": 0,
+   "level": 1
+  }
+ },
+ "design": {
+  "layers": []
+ }
+}

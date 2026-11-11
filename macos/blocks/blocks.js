@@ -541,5 +541,8 @@
     ]};
   }
 
-  return {register, toolbox, kit, entry, num, txt, paramId, luaString, HATS, RESERVED, C};
+  // every block definition, the kits' too (for the manual's reference)
+  function definitions() { return DEFS.concat(...KITS.map(k => k.defs || [])); }
+
+  return {register, toolbox, kit, entry, num, txt, paramId, luaString, definitions, HATS, RESERVED, C};
 }));

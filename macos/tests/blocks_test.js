@@ -197,7 +197,7 @@ function run(name, code) {
 }
 
 // 1e. every example has a screen design, drawn first in redraw()
-for (const name of ['demo', 'pulse', 'looper', 'drums', 'grid_keys', 'visuals']) {
+for (const name of ['demo', 'pulse', 'looper', 'drums', 'grid_keys', 'visuals', 'glow']) {
   const doc = JSON.parse(fs.readFileSync(path.join(repo, 'macos', 'blocks', name + '.json')));
   const code = generate(doc.workspace, doc.name, doc.patch, doc.design);
   const out = run(name + '_design', code);

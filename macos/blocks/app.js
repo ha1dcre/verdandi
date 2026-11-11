@@ -253,6 +253,7 @@
     ['looper', 'looper.json', 'record a loop with K2 and K3, overdub, change its speed'],
     ['drums', 'drums.json', 'euclidean rhythms and a pattern on the kick patch, tempo on E2'],
     ['grid_keys', 'grid_keys.json', 'a grid keyboard for the sound, lit where it is held'],
+    ['glow', 'glow.json', 'the instrument of the manual: a melody, a sound with an lfo and a delay, a screen that glows'],
     ['visuals', 'visuals.json', 'stars, rings and sparks on every note, an orbit, a wave with the sound: the screen page'],
   ];
   async function openDialog() {
@@ -511,7 +512,10 @@
   // ---- start: an example the address names (?example=pulse), the draft of last time, or the
   // first example (with the guide open, the first time)
   const query = new URLSearchParams(location.search);
-  const wanted = EXAMPLES.find(x => x[0] === query.get('example'));
+  // the manual's stages of glow (?stage=1, 2) load like examples
+  const stages = {1: 'tutorial_1.json', 2: 'tutorial_2.json'};
+  const wanted = EXAMPLES.find(x => x[0] === query.get('example')) ||
+    (stages[query.get('stage')] ? ['glow', stages[query.get('stage')]] : null);
   let draft = null;
   try { draft = JSON.parse(localStorage.getItem(DRAFT) || 'null'); } catch (e) { draft = null; }
   let started = false;
@@ -534,6 +538,13 @@
     if (!guide.seen()) guide.open();
   }
   if (['sound', 'screen'].includes(query.get('view'))) showView(query.get('view'));
+  // for the manual and links into it: a selected screen element, an open toolbox category
+  if (query.get('select')) designer.select(query.get('select'));
+  if (query.get('category')) {
+    const tb = ws.getToolbox();
+    const item = tb && tb.getToolboxItems().find(i => i.getName && i.getName() === query.get('category'));
+    if (item) tb.setSelectedItem(item);
+  }
   if (query.has('guide')) guide.open(Number(query.get('guide')) || 0, Number(query.get('step')) || 0);
   connect();
 })();
