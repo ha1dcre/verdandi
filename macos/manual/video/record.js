@@ -12,7 +12,8 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const {spawn, execFileSync} = require('child_process');
+const {spawn, execFileSync, execFile} = require('child_process');
+const run = (cmd, args) => new Promise((ok, bad) => execFile(cmd, args, e => e ? bad(e) : ok()));
 
 const OUT = path.resolve(process.argv[2] || 'video-out');
 const FULL = process.argv.includes('--full');
@@ -269,13 +270,14 @@ for w in list where (w[kCGWindowName as String] as? String) == "Verdandi" && (w[
 }
 const windowFrames = [];
 let filmingWindow = false;
-async function filmWindow(id, seconds) {
+// frames until filmingWindow goes off; asynchronous, so the scene goes on meanwhile (a blocking
+// loop here once froze the picture while E2 turned)
+async function filmWindow(id) {
   filmingWindow = true;
-  const end = now() + seconds;
-  while (now() < end && filmingWindow) {
+  while (filmingWindow) {
     const file = path.join(OUT, 'window', String(windowFrames.length).padStart(5, '0') + '.jpg');
     const t = now();
-    execFileSync('screencapture', ['-l' + id, '-x', '-o', '-t', 'jpg', file]);
+    await run('screencapture', ['-l' + id, '-x', '-o', '-t', 'jpg', file]);
     windowFrames.push({file, t});
   }
 }
@@ -435,10 +437,12 @@ if (process.argv.includes('--assemble')) { assemble(); process.exit(0); }
     await film(false);
 
     scene('verdandi');
-    const filmed = filmWindow(win, FULL ? 18 : 14);
+    const filmed = filmWindow(win);
+    await sleep(5000);
+    for (let i = 0; i < 6; i++) { await lua('enc(2, 25)', 0); await sleep(700); }
+    for (let i = 0; i < 6; i++) { await lua('enc(2, -20)', 0); await sleep(700); }
     await sleep(4000);
-    for (let i = 0; i < 6; i++) { await lua('enc(2, 25)', 0); await sleep(600); }
-    for (let i = 0; i < 6; i++) { await lua('enc(2, -20)', 0); await sleep(600); }
+    filmingWindow = false;
     await filmed;
     execFileSync('sips', ['-s', 'format', 'png', windowFrames[Math.floor(windowFrames.length / 2)].file, '--out', path.join(OUT, 'verdandi.png')], {stdio: 'ignore'});
 
