@@ -33,6 +33,11 @@ needs a Mac with Apple silicon and macOS 15 (Sequoia) or newer.
 - the MIX page by mouse, an output fader and mute
 - the AUv3 plugin: a DAW track goes into norns and norns comes back into the track
 - screenshots and GIFs of the screen for sharing
+- the script builder (the **blocks** button in maiden): make your own norns scripts without
+  writing Lua. blocks say what the script does, the sound page builds its instrument from
+  modules and cables (played by Weave, a modular engine that comes with Verdandi), the screen
+  page puts moving visuals on the norns screen. a guide teaches it step by step; chapter 8 of
+  the manual explains it
 
 the manual is in the dmg (`Manual.pdf`) and in [macos/manual](macos/manual/manual.html).
 
