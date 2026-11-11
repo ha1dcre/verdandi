@@ -25,7 +25,12 @@ require(path.join(blocklyDir, 'blocks_compressed.js'));
 const lua = require(path.join(blocklyDir, 'lua_compressed.js'));
 Blockly.setLocale(require(path.join(blocklyDir, 'msg', 'en.js')));
 const VB = require(path.join(repo, 'macos', 'blocks', 'blocks.js'));
-const api = VB.register(Blockly, lua);
+for (const k of ['sound', 'looper', 'seq', 'grid', 'ui']) require(path.join(repo, 'macos', 'blocks', 'blocks_' + k + '.js'))(VB);
+const weave = require(path.join(repo, 'macos', 'blocks', 'weave.js'));
+const catalog = JSON.parse(fs.readFileSync(path.join(repo, 'macos', 'blocks', 'weave.json')));
+// the sound page of the document being generated
+let patch = weave.DEFAULT_PATCH;
+const api = VB.register(Blockly, lua, {getPatch: () => patch, weave, catalog});
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'blocks-test-'));
 let failed = 0;
@@ -34,7 +39,8 @@ function check(name, ok, detail) {
   if (!ok) failed++;
 }
 
-function generate(json, name) {
+function generate(json, name, docPatch) {
+  patch = docPatch || weave.DEFAULT_PATCH;
   const ws = new Blockly.Workspace();
   Blockly.serialization.workspaces.load(json, ws);
   const code = api.generate(ws, name);
@@ -54,7 +60,7 @@ function run(name, code) {
   }
   try {
     const out = execFileSync(path.join(prefix, 'bin', 'lua'),
-      [path.join(repo, 'macos', 'tests', 'blocks_norns_stub.lua'), repo, file], {stdio: 'pipe'});
+      [path.join(repo, 'macos', 'tests', 'blocks_norns_stub.lua'), repo, file, fs.mkdtempSync(path.join(tmp, 'data-'))], {stdio: 'pipe'});
     return String(out).split('\n');
   } catch (e) {
     check(name + ': runs', false, String(e.stderr) + String(e.stdout).split('\n').slice(-8).join('\n') + '\n' + code);
@@ -65,20 +71,26 @@ function run(name, code) {
 // 1. the example the builder opens with
 {
   const demo = JSON.parse(fs.readFileSync(path.join(repo, 'macos', 'blocks', 'demo.json')));
-  const code = generate(demo.workspace, demo.name);
+  const code = generate(demo.workspace, demo.name, demo.patch);
   const out = run('demo', code);
   check('demo: runs to the end', out.includes('-- ok'), out.slice(-5).join('\n'));
-  check('demo: PolyPerc', /^engine\.name = 'PolyPerc'$/m.test(code));
+  check('demo: Weave with its patch', /^engine\.name = 'Weave'$/m.test(code) && /^\s*_blk_sound_init\(\)$/m.test(code) &&
+    out.some(l => l.startsWith('engine.patch m voice voice')) && out.includes('params.add_group sound sound ' + weave.params(demo.patch, catalog).length));
   check('demo: control added with its range', out.includes('params.add_control cutoff cutoff 200 5000 1200'));
-  const hz = out.filter(l => l.startsWith('engine.hz')).map(l => l.split(' ')[1]);
+  const hz = out.filter(l => l.startsWith('engine.note_on')).map(l => l.split(' ')[2]);
   // the loop waits for the clock first: three clock steps play melody steps 1 3 5 of A minor
   // pentatonic from 57 (57 62 67); then K2 stops it, so step 8 (74) never sounds
   check('demo: the melody, then K2 stops it', hz.join(' ') === '220.000 293.665 391.995',
-    'engine.hz: ' + hz.join(' '));
+    'engine.note_on: ' + hz.join(' '));
+  check('demo: every note ends', out.filter(l => l.startsWith('engine.note_off')).length >= 1 &&
+    out.filter(l => l.startsWith('engine.note_on')).every(l => /^engine\.note_on \d+ [\d.]+ 0\.787$/.test(l)),
+    out.filter(l => /engine\.note_(on|off)/.test(l)).join(', '));
   check('demo: E2 changes cutoff, E3 does not', out.includes('params.set cutoff 1250') &&
-    out.includes('params.set cutoff 1100') && out.filter(l => l.startsWith('params.set')).length === 2,
+    out.includes('params.set cutoff 1100') && out.filter(l => l.startsWith('params.set cutoff ')).length === 2,
     out.filter(l => l.startsWith('params.set')).join(', '));
-  check('demo: sequenced cutoff follows the control', out.includes('engine.cutoff 1200'));
+  // the sound knob follows the control, and tells the engine
+  check('demo: sequenced cutoff follows the control', out.includes('params.set filter1_cutoff 1200') &&
+    out.includes('engine.set filter1.cutoff 1200'));
   check('demo: redraw clears, draws, updates', /screen\.clear[\s\S]*screen\.text first steps[\s\S]*screen\.text cutoff 1100 Hz[\s\S]*screen\.rect 2 38 27\.500 4[\s\S]*screen\.text K2: play[\s\S]*screen\.update/.test(out.join('\n')),
     out.filter(l => l.startsWith('screen.')).join(', '));
   check('demo: only its own globals', out.filter(l => l.startsWith('global ')).sort().join(',') ===
@@ -88,7 +100,7 @@ function run(name, code) {
 // 1b. the visual example: widgets, animation, both encoders
 {
   const doc = JSON.parse(fs.readFileSync(path.join(repo, 'macos', 'blocks', 'pulse.json')));
-  const code = generate(doc.workspace, doc.name);
+  const code = generate(doc.workspace, doc.name, doc.patch);
   const out = run('pulse', code);
   const text = out.join('\n');
   check('pulse: runs to the end', out.includes('-- ok'), out.slice(-5).join('\n'));
@@ -99,6 +111,31 @@ function run(name, code) {
     out.filter(l => l.startsWith('params.set spread')).length === 2, out.filter(l => l.startsWith('params.set')).join(', '));
   check('pulse: the ring breathes with the beat', /screen\.circle 64 32 \d/.test(text) && new Set(out.filter(l => l.startsWith('screen.circle 64 32') && !l.endsWith(' 2')).map(l => l.split(' ')[3])).size > 1,
     out.filter(l => l.startsWith('screen.circle')).join(', '));
+}
+
+// 1c. the other examples: a looper, drums, a grid keyboard
+{
+  const load = name => JSON.parse(fs.readFileSync(path.join(repo, 'macos', 'blocks', name + '.json')));
+  let doc = load('looper');
+  let out = run('looper', generate(doc.workspace, doc.name, doc.patch));
+  let all = out.join('\n');
+  check('looper: runs, no engine (its sound is off)', out.includes('-- ok') && !/engine\.name|engine\./.test(all), out.slice(-4).join('\n'));
+  // K2 records; K3 while recording finishes the loop (its length is where the playhead was)
+  check('looper: K2 records, K3 finishes the loop', /key 2 1\n[\s\S]*?softcut\.rec 1 1[\s\S]*?key 3 1\nsoftcut\.rec 1 0\nsoftcut\.loop_end 1 [\d.]+\nsoftcut\.position 1 1/.test(all),
+    out.slice(out.indexOf('-- keys'), out.indexOf('-- keys') + 30).join(' | '));
+  check('looper: E3 turns the speed', /params\.set speed 1\.050\nsoftcut\.rate 1 1\.050/.test(all), out.filter(l => /speed|rate/.test(l)).join(', '));
+  doc = load('drums');
+  out = run('drums', generate(doc.workspace, doc.name, doc.patch));
+  all = out.join('\n');
+  const notes = out.filter(l => l.startsWith('engine.note_on')).map(l => Number(l.split(' ')[2]).toFixed(1));
+  check('drums: runs, kick on step 1 of 3 in 8', out.includes('-- ok') && notes[0] === '65.4', notes.join(' '));
+  doc = load('grid_keys');
+  out = run('grid_keys', generate(doc.workspace, doc.name, doc.patch));
+  all = out.join('\n');
+  check('grid keys: key 3,2 plays note 73 and ends it', /-- grid\nengine\.note_on 73 554\.365 0\.787\nengine\.note_off 73/.test(all),
+    out.slice(out.indexOf('-- grid'), out.indexOf('-- grid') + 4).join(' | '));
+  check('grid keys: the grid is drawn, C keys lit', /grid\.all 0[\s\S]*grid\.led 8 8 5[\s\S]*grid\.refresh/.test(all),
+    out.filter(l => l.startsWith('grid.led')).slice(0, 5).join(', '));
 }
 
 // 2. every norns block, each where it belongs, with an input in every slot
@@ -131,7 +168,12 @@ function run(name, code) {
   const chain = list => list.reduceRight((next, b) => next ? Object.assign({}, b, {next: {block: next}}) : b, null);
   const print = v => ({type: 'text_print', inputs: {TEXT: {block: v}}});
   const inHat = {nv_enc_delta: 'nv_enc', nv_midi_note_num: 'nv_midi_note', nv_midi_velocity: 'nv_midi_note',
-    nv_param_add: 'nv_init', nv_ui_dial: 'nv_redraw', nv_ui_slider: 'nv_redraw', nv_ui_playback: 'nv_redraw'};
+    nv_param_add: 'nv_init', nv_ui_dial: 'nv_redraw', nv_ui_slider: 'nv_redraw', nv_ui_playback: 'nv_redraw',
+    nv_midi_play: 'nv_init', nv_looper_setup: 'nv_init', nv_param_option: 'nv_init', nv_param_switch: 'nv_init',
+    nv_lfo: 'nv_init', nv_looper_wave: 'nv_redraw', nv_ui_pages: 'nv_redraw', nv_ui_tabs: 'nv_redraw', nv_ui_list: 'nv_redraw',
+    nv_grid_x: 'nv_grid_key', nv_grid_y: 'nv_grid_key', nv_grid_led: 'nv_grid_draw', nv_arc_delta: 'nv_arc_turn',
+    nv_arc_led: 'nv_arc_draw', nv_arc_segment: 'nv_arc_draw', nv_param_value: 'nv_param_changed',
+    nv_midi_cc_value: 'nv_midi_cc'};
   const bodies = {nv_init: [{type: 'variables_set', fields: {VAR: {id: 'v_seq'}}, inputs: {VALUE: {block:
     {type: 'nv_seq_make', inputs: {LIST: value('LIST', 'Array')}}}}}], nv_every: [], nv_enc: [], nv_midi_note: [],
     nv_redraw: []};
@@ -141,7 +183,7 @@ function run(name, code) {
     if (m.kind === 'hat') continue;
     if (type === 'nv_seq_make') { seen.push(type); continue; }  // in nv_init above
     const hat = inHat[type] || 'nv_every';
-    bodies[hat].push(m.kind === 'value' ? print(m.json) : m.json);
+    (bodies[hat] = bodies[hat] || []).push(m.kind === 'value' ? print(m.json) : m.json);
     seen.push(type);
   }
   // controls added first, before anything reads them
@@ -176,6 +218,18 @@ function run(name, code) {
   check('every block: dial, slider and play symbol drew', out.filter(l => l === 'screen.arc 2 2 2.000 -3.927 -3.927' || l.startsWith('screen.arc')).length >= 2 &&
     /screen\.text_center cutoff/.test(out.join('\n')), out.filter(l => /arc|text_center/.test(l)).slice(0, 6).join(', '));
   check('every block: frame number counts drawings', /_blk_frame = _blk_frame \+ 1/.test(code));
+  const all = out.join('\n');
+  const after = (marker, re) => re.test(out.slice(out.indexOf(marker)).join('\n'));
+  check('every block: sound notes, a sample slot, all off, the voices poll', /engine\.note_on 1001 /.test(all) &&
+    /engine\.load_sample 2 \/dust\/audio\/my_sound\.wav/.test(all) && /engine\.all_off 0/.test(all) && /poll\.start voices/.test(all));
+  check('every block: looper set up, recording, its waveform drawn', /softcut\.enable 1 1/.test(all) &&
+    /softcut\.rec 1 1/.test(all) && /softcut\.render_buffer 1 1 /.test(all), out.filter(l => l.startsWith('softcut.')).slice(0, 12).join(', '));
+  check('every block: a file loaded into a looper', /audio\.file_info \/dust\/audio\/my_loop\.wav[\s\S]*softcut\.buffer_read_mono \/dust\/audio\/my_loop\.wav/.test(all));
+  check('every block: grid lit, its key read', /grid\.led 2 2 2/.test(all) && /grid\.refresh/.test(all) &&
+    after('-- grid', /^3$[\s\S]*^2$/m), out.slice(out.indexOf('-- grid'), out.indexOf('-- grid') + 6).join(' | '));
+  check('every block: arc lit, its turn read', /arc\.led 1 2 2/.test(all) && /arc\.segment 1 /.test(all) && after('-- arc', /^5$/m));
+  check('every block: MIDI CC read and sent', after('-- midi', /^99$/m) && /midi\.cc 2 2 1/.test(all));
+  check('every block: a control\'s change runs its blocks', /params\.set cutoff [\d.]+\n[\s\S]*?^[\d.]+$/m.test(all));
 }
 
 // 3. names a script takes for itself must not replace norns' own

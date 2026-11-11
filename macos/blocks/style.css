@@ -91,7 +91,41 @@ main {
   grid-template-columns: 1fr 420px;
   min-height: 0;
 }
-#blockly { min-width: 0; min-height: 0; }
+/* the work area: the blocks, or the sound page; the guide floats over it */
+.work { position: relative; min-width: 0; min-height: 0; }
+#blockly, #patcher { position: absolute; inset: 0; }
+#patcher[hidden], #blockly[hidden] { display: none; }
+.views { display: flex; gap: 2px; margin-left: 10px; }
+.views button { border-radius: 4px 4px 0 0; border-bottom: 2px solid transparent; }
+.views button[aria-selected="true"] { border-bottom-color: var(--accent); font-weight: 600; }
+.guide-open { background: none; border-color: var(--accent); color: var(--accent); }
+#grid { display: block; margin: 10px auto 0; width: 321px; height: 161px; cursor: pointer; border-radius: 4px; background: #0b0b0b; }
+#grid[hidden] { display: none; }
+
+/* the guide: a card in the corner of the work area */
+.guide {
+  position: absolute; right: 80px; bottom: 16px; z-index: 50;
+  width: min(380px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow: auto;
+  padding: 14px 16px; border: 1px solid var(--accent); border-radius: 8px;
+  background: var(--panel); color: var(--text); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+.guide[hidden] { display: none; }
+.guide header { display: flex; align-items: center; gap: 8px; padding: 0; border: 0; background: none; margin-bottom: 6px; }
+.guide h2 { margin: 0; font-size: 14px; flex: 1; }
+.guide .count { font-size: 12px; color: var(--muted); }
+.guide p { margin: 6px 0; line-height: 1.5; }
+.guide .step-text b { color: var(--accent); font-weight: 600; }
+.guide code { font: 12px ui-monospace, Menlo, monospace; padding: 0 3px; border-radius: 3px; background: var(--bg); }
+.guide .done { color: var(--ok); font-weight: 600; }
+.guide .waiting { color: var(--muted); font-size: 12px; }
+.guide .row { display: flex; gap: 6px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+.guide .row .spacer { flex: 1; }
+.guide ol { margin: 6px 0 0; padding-left: 20px; }
+.guide li { margin: 4px 0; }
+.guide li button { border: 0; background: none; padding: 2px 0; color: var(--text); text-align: left; }
+.guide li button:hover { color: var(--accent); }
+.guide li.finished button::after { content: "  \2713"; color: var(--ok); }
+.guide .close { border: 0; background: none; font-size: 16px; line-height: 1; padding: 2px 6px; }
 
 aside {
   display: grid;

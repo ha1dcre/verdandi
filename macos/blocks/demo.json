@@ -1,83 +1,698 @@
 {
-  "format": "verdandi-blocks",
-  "version": 1,
-  "name": "first_steps",
-  "workspace": {
-    "variables": [
-      {"name": "melody", "id": "v_melody"},
-      {"name": "playing", "id": "v_playing"}
-    ],
-    "blocks": {"languageVersion": 0, "blocks": [
-      {"type": "nv_init", "x": 20, "y": 20, "inputs": {"DO": {"block":
-        {"type": "nv_param_add", "fields": {"NAME": "cutoff", "MIN": 200, "MAX": 5000, "DEFAULT": 1200},
-         "next": {"block": {"type": "variables_set", "fields": {"VAR": {"id": "v_melody"}},
-          "inputs": {"VALUE": {"block": {"type": "nv_seq_make", "inputs": {"LIST": {"block":
-            {"type": "lists_create_with", "extraState": {"itemCount": 8}, "inputs": {
-              "ADD0": {"block": {"type": "math_number", "fields": {"NUM": 1}}},
-              "ADD1": {"block": {"type": "math_number", "fields": {"NUM": 3}}},
-              "ADD2": {"block": {"type": "math_number", "fields": {"NUM": 5}}},
-              "ADD3": {"block": {"type": "math_number", "fields": {"NUM": 8}}},
-              "ADD4": {"block": {"type": "math_number", "fields": {"NUM": 6}}},
-              "ADD5": {"block": {"type": "math_number", "fields": {"NUM": 5}}},
-              "ADD6": {"block": {"type": "math_number", "fields": {"NUM": 3}}},
-              "ADD7": {"block": {"type": "math_number", "fields": {"NUM": 2}}}}}}}}}},
-          "next": {"block": {"type": "variables_set", "fields": {"VAR": {"id": "v_playing"}},
-           "inputs": {"VALUE": {"block": {"type": "logic_boolean", "fields": {"BOOL": "TRUE"}}}},
-           "next": {"block": {"type": "nv_sound_set", "fields": {"PARAM": "release"},
-            "inputs": {"VALUE": {"shadow": {"type": "math_number", "fields": {"NUM": 0.8}}}}}}}}}}}}}},
-
-      {"type": "nv_every", "x": 20, "y": 230, "fields": {"DIV": "1/4"}, "inputs": {"DO": {"block":
-        {"type": "controls_if", "inputs": {
-          "IF0": {"block": {"type": "variables_get", "fields": {"VAR": {"id": "v_playing"}}}},
-          "DO0": {"block": {"type": "nv_sound_set", "fields": {"PARAM": "cutoff"},
-            "inputs": {"VALUE": {"block": {"type": "nv_param_get", "fields": {"NAME": "cutoff"}}}},
-            "next": {"block": {"type": "nv_play_note", "inputs": {"NOTE": {"block":
-              {"type": "nv_scale_note", "fields": {"SCALE": "Minor Pentatonic"}, "inputs": {
-                "DEGREE": {"block": {"type": "nv_seq_next", "fields": {"VAR": {"id": "v_melody"}}}},
-                "ROOT": {"shadow": {"type": "math_number", "fields": {"NUM": 57}}}}}}}}}}}}}}}},
-
-      {"type": "nv_enc", "x": 20, "y": 400, "fields": {"ENC": "2"}, "inputs": {"DO": {"block":
-        {"type": "nv_param_change", "fields": {"NAME": "cutoff"}, "inputs": {"DELTA": {"block":
-          {"type": "math_arithmetic", "fields": {"OP": "MULTIPLY"}, "inputs": {
-            "A": {"block": {"type": "nv_enc_delta"}},
-            "B": {"shadow": {"type": "math_number", "fields": {"NUM": 50}}}}}}}}}}},
-
-      {"type": "nv_key", "x": 20, "y": 500, "fields": {"KEY": "2", "STATE": "1"}, "inputs": {"DO": {"block":
-        {"type": "variables_set", "fields": {"VAR": {"id": "v_playing"}}, "inputs": {"VALUE": {"block":
-          {"type": "logic_negate", "inputs": {"BOOL": {"block":
-            {"type": "variables_get", "fields": {"VAR": {"id": "v_playing"}}}}}}}}}}}},
-
-      {"type": "nv_redraw", "x": 520, "y": 20, "inputs": {"DO": {"block":
-        {"type": "nv_screen_text", "inputs": {
-          "TEXT": {"shadow": {"type": "text", "fields": {"TEXT": "first steps"}}},
-          "X": {"shadow": {"type": "math_number", "fields": {"NUM": 2}}},
-          "Y": {"shadow": {"type": "math_number", "fields": {"NUM": 10}}},
-          "LEVEL": {"shadow": {"type": "math_number", "fields": {"NUM": 15}}}},
-         "next": {"block": {"type": "nv_screen_text", "inputs": {
-          "TEXT": {"block": {"type": "text_join", "extraState": {"itemCount": 3}, "inputs": {
-            "ADD0": {"block": {"type": "text", "fields": {"TEXT": "cutoff "}}},
-            "ADD1": {"block": {"type": "math_round", "fields": {"OP": "ROUND"}, "inputs": {"NUM": {"block":
-              {"type": "nv_param_get", "fields": {"NAME": "cutoff"}}}}}},
-            "ADD2": {"block": {"type": "text", "fields": {"TEXT": " Hz"}}}}}},
-          "X": {"shadow": {"type": "math_number", "fields": {"NUM": 2}}},
-          "Y": {"shadow": {"type": "math_number", "fields": {"NUM": 30}}},
-          "LEVEL": {"shadow": {"type": "math_number", "fields": {"NUM": 8}}}},
-          "next": {"block": {"type": "nv_screen_rect", "fields": {"MODE": "fill"}, "inputs": {
-           "X": {"shadow": {"type": "math_number", "fields": {"NUM": 2}}},
-           "Y": {"shadow": {"type": "math_number", "fields": {"NUM": 38}}},
-           "W": {"block": {"type": "math_arithmetic", "fields": {"OP": "DIVIDE"}, "inputs": {
-             "A": {"block": {"type": "nv_param_get", "fields": {"NAME": "cutoff"}}},
-             "B": {"shadow": {"type": "math_number", "fields": {"NUM": 40}}}}}},
-           "H": {"shadow": {"type": "math_number", "fields": {"NUM": 4}}},
-           "LEVEL": {"shadow": {"type": "math_number", "fields": {"NUM": 6}}}},
-           "next": {"block": {"type": "nv_screen_text", "inputs": {
-            "TEXT": {"block": {"type": "logic_ternary", "inputs": {
-              "IF": {"block": {"type": "variables_get", "fields": {"VAR": {"id": "v_playing"}}}},
-              "THEN": {"block": {"type": "text", "fields": {"TEXT": "K2: stop"}}},
-              "ELSE": {"block": {"type": "text", "fields": {"TEXT": "K2: play"}}}}}},
-            "X": {"shadow": {"type": "math_number", "fields": {"NUM": 2}}},
-            "Y": {"shadow": {"type": "math_number", "fields": {"NUM": 60}}},
-            "LEVEL": {"shadow": {"type": "math_number", "fields": {"NUM": 4}}}}}}}}}}}}}}
-    ]}
+ "format": "verdandi-blocks",
+ "version": 2,
+ "name": "first_steps",
+ "workspace": {
+  "variables": [
+   {
+    "name": "melody",
+    "id": "v_melody"
+   },
+   {
+    "name": "playing",
+    "id": "v_playing"
+   }
+  ],
+  "blocks": {
+   "languageVersion": 0,
+   "blocks": [
+    {
+     "type": "nv_init",
+     "x": 20,
+     "y": 20,
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_param_add",
+        "fields": {
+         "NAME": "cutoff",
+         "MIN": 200,
+         "MAX": 5000,
+         "DEFAULT": 1200
+        },
+        "next": {
+         "block": {
+          "type": "variables_set",
+          "fields": {
+           "VAR": {
+            "id": "v_melody"
+           }
+          },
+          "inputs": {
+           "VALUE": {
+            "block": {
+             "type": "nv_seq_make",
+             "inputs": {
+              "LIST": {
+               "block": {
+                "type": "lists_create_with",
+                "extraState": {
+                 "itemCount": 8
+                },
+                "inputs": {
+                 "ADD0": {
+                  "block": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 1
+                   }
+                  }
+                 },
+                 "ADD1": {
+                  "block": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 3
+                   }
+                  }
+                 },
+                 "ADD2": {
+                  "block": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 5
+                   }
+                  }
+                 },
+                 "ADD3": {
+                  "block": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 8
+                   }
+                  }
+                 },
+                 "ADD4": {
+                  "block": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 6
+                   }
+                  }
+                 },
+                 "ADD5": {
+                  "block": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 5
+                   }
+                  }
+                 },
+                 "ADD6": {
+                  "block": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 3
+                   }
+                  }
+                 },
+                 "ADD7": {
+                  "block": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 2
+                   }
+                  }
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          },
+          "next": {
+           "block": {
+            "type": "variables_set",
+            "fields": {
+             "VAR": {
+              "id": "v_playing"
+             }
+            },
+            "inputs": {
+             "VALUE": {
+              "block": {
+               "type": "logic_boolean",
+               "fields": {
+                "BOOL": "TRUE"
+               }
+              }
+             }
+            },
+            "next": {
+             "block": {
+              "type": "nv_sound_set",
+              "fields": {
+               "KEY": "env1.r"
+              },
+              "inputs": {
+               "VALUE": {
+                "shadow": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 0.8
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_every",
+     "x": 20,
+     "y": 230,
+     "fields": {
+      "DIV": "1/4"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "controls_if",
+        "inputs": {
+         "IF0": {
+          "block": {
+           "type": "variables_get",
+           "fields": {
+            "VAR": {
+             "id": "v_playing"
+            }
+           }
+          }
+         },
+         "DO0": {
+          "block": {
+           "type": "nv_sound_set",
+           "fields": {
+            "KEY": "filter1.cutoff"
+           },
+           "inputs": {
+            "VALUE": {
+             "block": {
+              "type": "nv_param_get",
+              "fields": {
+               "NAME": "cutoff"
+              }
+             }
+            }
+           },
+           "next": {
+            "block": {
+             "type": "nv_play_note",
+             "inputs": {
+              "NOTE": {
+               "block": {
+                "type": "nv_scale_note",
+                "fields": {
+                 "SCALE": "Minor Pentatonic"
+                },
+                "inputs": {
+                 "DEGREE": {
+                  "block": {
+                   "type": "nv_seq_next",
+                   "fields": {
+                    "VAR": {
+                     "id": "v_melody"
+                    }
+                   }
+                  }
+                 },
+                 "ROOT": {
+                  "shadow": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 57
+                   }
+                  }
+                 }
+                }
+               }
+              },
+              "VEL": {
+               "shadow": {
+                "type": "math_number",
+                "fields": {
+                 "NUM": 100
+                }
+               }
+              },
+              "LEN": {
+               "shadow": {
+                "type": "math_number",
+                "fields": {
+                 "NUM": 0.5
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_enc",
+     "x": 20,
+     "y": 400,
+     "fields": {
+      "ENC": "2"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_param_change",
+        "fields": {
+         "NAME": "cutoff"
+        },
+        "inputs": {
+         "DELTA": {
+          "block": {
+           "type": "math_arithmetic",
+           "fields": {
+            "OP": "MULTIPLY"
+           },
+           "inputs": {
+            "A": {
+             "block": {
+              "type": "nv_enc_delta"
+             }
+            },
+            "B": {
+             "shadow": {
+              "type": "math_number",
+              "fields": {
+               "NUM": 50
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_key",
+     "x": 20,
+     "y": 500,
+     "fields": {
+      "KEY": "2",
+      "STATE": "1"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "variables_set",
+        "fields": {
+         "VAR": {
+          "id": "v_playing"
+         }
+        },
+        "inputs": {
+         "VALUE": {
+          "block": {
+           "type": "logic_negate",
+           "inputs": {
+            "BOOL": {
+             "block": {
+              "type": "variables_get",
+              "fields": {
+               "VAR": {
+                "id": "v_playing"
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_redraw",
+     "x": 520,
+     "y": 20,
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_screen_text",
+        "inputs": {
+         "TEXT": {
+          "shadow": {
+           "type": "text",
+           "fields": {
+            "TEXT": "first steps"
+           }
+          }
+         },
+         "X": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 2
+           }
+          }
+         },
+         "Y": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 10
+           }
+          }
+         },
+         "LEVEL": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 15
+           }
+          }
+         }
+        },
+        "next": {
+         "block": {
+          "type": "nv_screen_text",
+          "inputs": {
+           "TEXT": {
+            "block": {
+             "type": "text_join",
+             "extraState": {
+              "itemCount": 3
+             },
+             "inputs": {
+              "ADD0": {
+               "block": {
+                "type": "text",
+                "fields": {
+                 "TEXT": "cutoff "
+                }
+               }
+              },
+              "ADD1": {
+               "block": {
+                "type": "math_round",
+                "fields": {
+                 "OP": "ROUND"
+                },
+                "inputs": {
+                 "NUM": {
+                  "block": {
+                   "type": "nv_param_get",
+                   "fields": {
+                    "NAME": "cutoff"
+                   }
+                  }
+                 }
+                }
+               }
+              },
+              "ADD2": {
+               "block": {
+                "type": "text",
+                "fields": {
+                 "TEXT": " Hz"
+                }
+               }
+              }
+             }
+            }
+           },
+           "X": {
+            "shadow": {
+             "type": "math_number",
+             "fields": {
+              "NUM": 2
+             }
+            }
+           },
+           "Y": {
+            "shadow": {
+             "type": "math_number",
+             "fields": {
+              "NUM": 30
+             }
+            }
+           },
+           "LEVEL": {
+            "shadow": {
+             "type": "math_number",
+             "fields": {
+              "NUM": 8
+             }
+            }
+           }
+          },
+          "next": {
+           "block": {
+            "type": "nv_screen_rect",
+            "fields": {
+             "MODE": "fill"
+            },
+            "inputs": {
+             "X": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 2
+               }
+              }
+             },
+             "Y": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 38
+               }
+              }
+             },
+             "W": {
+              "block": {
+               "type": "math_arithmetic",
+               "fields": {
+                "OP": "DIVIDE"
+               },
+               "inputs": {
+                "A": {
+                 "block": {
+                  "type": "nv_param_get",
+                  "fields": {
+                   "NAME": "cutoff"
+                  }
+                 }
+                },
+                "B": {
+                 "shadow": {
+                  "type": "math_number",
+                  "fields": {
+                   "NUM": 40
+                  }
+                 }
+                }
+               }
+              }
+             },
+             "H": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 4
+               }
+              }
+             },
+             "LEVEL": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 6
+               }
+              }
+             }
+            },
+            "next": {
+             "block": {
+              "type": "nv_screen_text",
+              "inputs": {
+               "TEXT": {
+                "block": {
+                 "type": "logic_ternary",
+                 "inputs": {
+                  "IF": {
+                   "block": {
+                    "type": "variables_get",
+                    "fields": {
+                     "VAR": {
+                      "id": "v_playing"
+                     }
+                    }
+                   }
+                  },
+                  "THEN": {
+                   "block": {
+                    "type": "text",
+                    "fields": {
+                     "TEXT": "K2: stop"
+                    }
+                   }
+                  },
+                  "ELSE": {
+                   "block": {
+                    "type": "text",
+                    "fields": {
+                     "TEXT": "K2: play"
+                    }
+                   }
+                  }
+                 }
+                }
+               },
+               "X": {
+                "shadow": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 2
+                 }
+                }
+               },
+               "Y": {
+                "shadow": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 60
+                 }
+                }
+               },
+               "LEVEL": {
+                "shadow": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 4
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   ]
   }
+ },
+ "patch": {
+  "enabled": true,
+  "modules": [
+   {
+    "id": "voice",
+    "type": "voice",
+    "x": 20,
+    "y": 30,
+    "params": {}
+   },
+   {
+    "id": "osc1",
+    "type": "osc",
+    "x": 250,
+    "y": 30,
+    "params": {
+     "wave": 2
+    }
+   },
+   {
+    "id": "env1",
+    "type": "env",
+    "x": 250,
+    "y": 330,
+    "params": {
+     "a": 0.002,
+     "d": 0.4,
+     "s": 0.2,
+     "r": 0.4
+    }
+   },
+   {
+    "id": "filter1",
+    "type": "filter",
+    "x": 480,
+    "y": 30,
+    "params": {
+     "cutoff": 900,
+     "mod": 3,
+     "track": 0.3
+    }
+   },
+   {
+    "id": "vca1",
+    "type": "vca",
+    "x": 710,
+    "y": 30,
+    "params": {}
+   },
+   {
+    "id": "out",
+    "type": "out",
+    "x": 940,
+    "y": 30,
+    "params": {
+     "level": 0.5
+    }
+   }
+  ],
+  "cables": [
+   {
+    "from": "osc1.out",
+    "to": "filter1.in"
+   },
+   {
+    "from": "env1.out",
+    "to": "filter1.mod"
+   },
+   {
+    "from": "filter1.out",
+    "to": "vca1.in"
+   },
+   {
+    "from": "env1.out",
+    "to": "vca1.cv"
+   },
+   {
+    "from": "vca1.out",
+    "to": "out.in"
+   }
+  ],
+  "fx": [
+   {
+    "id": "reverb1",
+    "type": "fx_reverb",
+    "params": {
+     "mix": 0.2
+    }
+   }
+  ],
+  "main": {
+   "input": 0,
+   "level": 1
+  }
+ }
 }

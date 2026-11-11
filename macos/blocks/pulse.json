@@ -1,6 +1,6 @@
 {
  "format": "verdandi-blocks",
- "version": 1,
+ "version": 2,
  "name": "pulse",
  "workspace": {
   "variables": [
@@ -55,7 +55,7 @@
              "block": {
               "type": "nv_sound_set",
               "fields": {
-               "PARAM": "release"
+               "KEY": "env1.r"
               },
               "inputs": {
                "VALUE": {
@@ -101,7 +101,7 @@
           "block": {
            "type": "nv_sound_set",
            "fields": {
-            "PARAM": "cutoff"
+            "KEY": "filter1.cutoff"
            },
            "inputs": {
             "VALUE": {
@@ -191,6 +191,22 @@
                    }
                   }
                  }
+                }
+               }
+              },
+              "VEL": {
+               "shadow": {
+                "type": "math_number",
+                "fields": {
+                 "NUM": 100
+                }
+               }
+              },
+              "LEN": {
+               "shadow": {
+                "type": "math_number",
+                "fields": {
+                 "NUM": 0.5
                 }
                }
               }
@@ -611,6 +627,101 @@
      }
     }
    ]
+  }
+ },
+ "patch": {
+  "enabled": true,
+  "modules": [
+   {
+    "id": "voice",
+    "type": "voice",
+    "x": 20,
+    "y": 30,
+    "params": {}
+   },
+   {
+    "id": "osc1",
+    "type": "osc",
+    "x": 250,
+    "y": 30,
+    "params": {
+     "wave": 2
+    }
+   },
+   {
+    "id": "env1",
+    "type": "env",
+    "x": 250,
+    "y": 330,
+    "params": {
+     "a": 0.002,
+     "d": 0.4,
+     "s": 0.2,
+     "r": 0.4
+    }
+   },
+   {
+    "id": "filter1",
+    "type": "filter",
+    "x": 480,
+    "y": 30,
+    "params": {
+     "cutoff": 900,
+     "mod": 3,
+     "track": 0.3
+    }
+   },
+   {
+    "id": "vca1",
+    "type": "vca",
+    "x": 710,
+    "y": 30,
+    "params": {}
+   },
+   {
+    "id": "out",
+    "type": "out",
+    "x": 940,
+    "y": 30,
+    "params": {
+     "level": 0.5
+    }
+   }
+  ],
+  "cables": [
+   {
+    "from": "osc1.out",
+    "to": "filter1.in"
+   },
+   {
+    "from": "env1.out",
+    "to": "filter1.mod"
+   },
+   {
+    "from": "filter1.out",
+    "to": "vca1.in"
+   },
+   {
+    "from": "env1.out",
+    "to": "vca1.cv"
+   },
+   {
+    "from": "vca1.out",
+    "to": "out.in"
+   }
+  ],
+  "fx": [
+   {
+    "id": "reverb1",
+    "type": "fx_reverb",
+    "params": {
+     "mix": 0.2
+    }
+   }
+  ],
+  "main": {
+   "input": 0,
+   "level": 1
   }
  }
 }

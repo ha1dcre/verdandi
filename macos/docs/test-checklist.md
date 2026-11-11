@@ -28,6 +28,17 @@ does not, send the logs: `~/norns/norns.log`, `sclang.log`, `jackd.log`, `auv3_b
 - [ ] open > pulse: the dial, slider and breathing ring look the same in the preview and in Verdandi
 - [ ] save under the name of a script that was not made in the builder (awake): it refuses
 - [ ] reload the page: the blocks of last time come back
+- [ ] sound page: pick the presets one by one, run, play the keyboard at the bottom: each sounds
+      like its name (pluck, pad, bass, bell, string, drone, kick, choir, acid, bleeps); knobs move
+      the sound live; dragging a cable re-runs the script within a second
+- [ ] sound page: drag a cable from an output to an input, click it to remove it; a cable that
+      would make a loop is refused with a reason
+- [ ] open > looper: K2 records the input, K3 finishes the loop, K2 overdubs, E3 changes speed
+      (also backwards); the waveform and playhead follow
+- [ ] open > grid_keys with the virtual grid (or a grid): keys play and light up
+- [ ] guide: lesson 1 from an empty workspace to a note heard in Verdandi; "show me" opens the
+      right category; a step done moves on by itself
+- [ ] load sample: a wav in dust/audio into slot 1, the sampler preset plays it at the pitch of the notes
 
 ## audio interface
 

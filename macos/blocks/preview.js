@@ -188,6 +188,7 @@
     }
     key(n, z) { this.call('_preview_key', n, z); }
     enc(n, d) { this.call('_preview_enc', n, d); }
+    grid(x, y, z) { this.call('_preview_grid_key', x, y, z); }
   }
 
   root.VerdandiPreview = Preview;

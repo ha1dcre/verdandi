@@ -26,15 +26,11 @@
     'Phrygian', 'Lydian', 'Mixolydian', 'Locrian', 'Major Pentatonic', 'Minor Pentatonic',
     'Blues Scale', 'Whole Tone', 'Chromatic'];
 
-  const SOUND_PARAMS = [
-    ['filter cutoff (Hz)', 'cutoff'], ['release (seconds)', 'release'], ['volume (0 to 1)', 'amp'],
-    ['pulse width (0 to 1)', 'pw'], ['gain', 'gain'], ['pan (-1 to 1)', 'pan']];
-
   const DIVISIONS = [['1/4 beat', '1/4'], ['1/8 beat', '1/8'], ['1/2 beat', '1/2'],
     ['1 beat', '1'], ['2 beats', '2'], ['4 beats (a bar)', '4'], ['1/3 beat (triplets)', '1/3'],
     ['1/16 beat', '1/16']];
 
-  const C = {event: 20, sound: 330, music: 290, time: 200, screen: 160, widget: 130, control: 60};
+  const C = {event: 20, sound: 330, music: 290, time: 200, screen: 160, widget: 130, control: 60, midi: 355};
 
   // a value input with a number shadow, for toolbox entries
   function num(n) { return {shadow: {type: 'math_number', fields: {NUM: n}}}; }
@@ -63,30 +59,20 @@
      tooltip: 'draws the 128 x 64 screen, 15 times a second; it is cleared before each drawing'},
     {type: 'nv_midi_note', message0: 'when a MIDI note %1 arrives %2 %3', args0: [
       {type: 'field_dropdown', name: 'TYPE', options: [['starts', 'on'], ['ends', 'off']]},
-      {type: 'input_dummy'}, {type: 'input_statement', name: 'DO'}], colour: C.event,
+      {type: 'input_dummy'}, {type: 'input_statement', name: 'DO'}], colour: C.midi,
      tooltip: 'notes from the MIDI device in slot 1 (SYSTEM > DEVICES > MIDI)'},
     {type: 'nv_enc_delta', message0: 'turn amount', output: 'Number', colour: C.event,
      tooltip: 'how far the encoder turned: positive clockwise, negative counter-clockwise'},
-    {type: 'nv_midi_note_num', message0: 'MIDI note number', output: 'Number', colour: C.event},
-    {type: 'nv_midi_velocity', message0: 'MIDI velocity', output: 'Number', colour: C.event},
+    {type: 'nv_midi_note_num', message0: 'MIDI note number', output: 'Number', colour: C.midi},
+    {type: 'nv_midi_velocity', message0: 'MIDI velocity', output: 'Number', colour: C.midi},
 
-    // sound: PolyPerc, the engine every norns has
-    {type: 'nv_play_note', message0: 'play note %1', args0: [{type: 'input_value', name: 'NOTE',
-      check: 'Number'}], previousStatement: null, nextStatement: null, colour: C.sound,
-     tooltip: 'plays a MIDI note number (60 = middle C) with the PolyPerc engine'},
-    {type: 'nv_play_hz', message0: 'play frequency %1 Hz', args0: [{type: 'input_value',
-      name: 'HZ', check: 'Number'}], previousStatement: null, nextStatement: null, colour: C.sound},
-    {type: 'nv_sound_set', message0: 'set sound %1 to %2', args0: [
-      {type: 'field_dropdown', name: 'PARAM', options: SOUND_PARAMS},
-      {type: 'input_value', name: 'VALUE', check: 'Number'}], inputsInline: true,
-     previousStatement: null, nextStatement: null, colour: C.sound,
-     tooltip: 'changes the sound of the notes played after it'},
+    // MIDI out
     {type: 'nv_midi_send', message0: 'send MIDI note %1 velocity %2 for %3 beats on channel %4',
      args0: [{type: 'input_value', name: 'NOTE', check: 'Number'},
        {type: 'input_value', name: 'VEL', check: 'Number'},
        {type: 'input_value', name: 'LEN', check: 'Number'},
        {type: 'input_value', name: 'CH', check: 'Number'}], inputsInline: true,
-     previousStatement: null, nextStatement: null, colour: C.sound,
+     previousStatement: null, nextStatement: null, colour: C.midi,
      tooltip: 'to the MIDI device in slot 1; the note ends by itself'},
 
     // music
@@ -216,17 +202,27 @@
     return '"' + String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n') + '"';
   }
 
-  function register(Blockly, lua) {
+  // kits: more blocks from their own files (blocks_sound.js, blocks_looper.js ...). a kit is
+  // {name, defs, hats, context, generators(F, ctx), prologue(s), initFirst(s, I), initLast(s, I,
+  // indent), functions(s, I, indent), toolbox: [{name, colour, contents}]}; register() takes them all.
+  const KITS = [];
+  function kit(k) { if (!KITS.some(x => x.name === k.name)) KITS.push(k); }
+
+  function register(Blockly, lua, opts) {
+    opts = opts || {};
     const g = lua.luaGenerator;
     const O = lua.Order;
-    g.addReservedWords(RESERVED);
+    g.addReservedWords(RESERVED + ',' + KITS.map(k => k.reserved || '').filter(Boolean).join(','));
+    const ALL = DEFS.concat(...KITS.map(k => k.defs || []));
+    const ALL_HATS = HATS.concat(...KITS.map(k => k.hats || []));
+    const ALL_CONTEXT = Object.assign({}, CONTEXT, ...KITS.map(k => k.context || {}));
 
-    for (const def of DEFS) {
-      const ctx = CONTEXT[def.type];
+    for (const def of ALL) {
+      const ctx = ALL_CONTEXT[def.type];
       Blockly.Blocks[def.type] = {
         init: function () {
           this.jsonInit(def);
-          if (HATS.includes(def.type)) this.hat = 'cap';
+          if (ALL_HATS.includes(def.type)) this.hat = 'cap';
         },
         onchange: ctx ? function (e) {
           if (!this.workspace || this.workspace.isFlyout || this.isInFlyout) return;
@@ -243,6 +239,10 @@
     const use = what => { if (S) S.uses.add(what); };
     const v = (block, name, order) => g.valueToCode(block, name, order === undefined ? O.NONE : order) || '0';
     const body = block => g.statementToCode(block, 'DO');
+    // whole numbers where norns wants them; a number typed into the block needs no rounding
+    const int = code => /^-?\d+$/.test(code) ? code : 'math.floor(' + code + ')';
+    // a text typed into the block is a string already
+    const asText = code => /^'(?:[^'\\]|\\.)*'$|^"(?:[^"\\]|\\.)*"$/.test(code) ? code : 'tostring(' + code + ')';
 
     const F = g.forBlock;
     F.nv_init = b => { S.init.push(body(b)); return ''; };
@@ -265,15 +265,6 @@
     F.nv_midi_note_num = () => ['note', O.ATOMIC];
     F.nv_midi_velocity = () => ['vel', O.ATOMIC];
 
-    F.nv_play_note = b => {
-      use('engine'); use('musicutil');
-      return 'engine.hz(musicutil.note_num_to_freq(' + v(b, 'NOTE') + '))\n';
-    };
-    F.nv_play_hz = b => { use('engine'); return 'engine.hz(' + v(b, 'HZ') + ')\n'; };
-    F.nv_sound_set = b => {
-      use('engine');
-      return 'engine.' + b.getFieldValue('PARAM') + '(' + v(b, 'VALUE') + ')\n';
-    };
     F.nv_midi_send = b => {
       use('midi');
       const fn = g.provideFunction_('_blk_midi_note', [
@@ -313,13 +304,9 @@
     F.nv_tempo_set = b => 'params:set("clock_tempo", ' + v(b, 'BPM') + ')\n';
     F.nv_tempo_get = () => ['clock.get_tempo()', O.HIGH];
 
-    // whole numbers where norns wants them; a number typed into the block needs no rounding
-    const int = code => /^-?\d+$/.test(code) ? code : 'math.floor(' + code + ')';
     const level = b => 'screen.level(' + int(v(b, 'LEVEL')) + ')\n';
     F.nv_screen_text = b => level(b) + 'screen.move(' + v(b, 'X') + ', ' + v(b, 'Y') + ')\n' +
       'screen.' + (b.getFieldValue('ALIGN') || 'text') + '(' + asText(g.valueToCode(b, 'TEXT', O.NONE) || '""') + ')\n';
-    // a text typed into the block is a string already
-    const asText = code => /^'(?:[^'\\]|\\.)*'$|^"(?:[^"\\]|\\.)*"$/.test(code) ? code : 'tostring(' + code + ')';
     F.nv_screen_rect = b => level(b) + 'screen.rect(' + v(b, 'X') + ', ' + v(b, 'Y') + ', ' +
       v(b, 'W') + ', ' + v(b, 'H') + ')\nscreen.' + b.getFieldValue('MODE') + '()\n';
     F.nv_screen_circle = b => level(b) + 'screen.circle(' + v(b, 'X') + ', ' + v(b, 'Y') + ', ' +
@@ -385,14 +372,22 @@
       return 'params:set(' + id + ', params:get(' + id + ') + ' + v(b, 'DELTA', O.ADDITIVE) + ')\n';
     };
 
+    // what the kits' generators get to work with
+    const kitCtx = {Blockly, g, O, v, body, use, luaString, paramId, int, asText, opts,
+      S: () => S,
+      // a piece of Lua the script needs once (a helper library), above init()
+      define: (key, code) => { g.definitions_['_blk_' + key] = code; }};
+    for (const k of KITS) if (k.generators) k.generators(F, kitCtx);
+
     // the whole workspace -> the text of a norns script
     function generate(workspace, name) {
-      S = {init: [], loops: [], keys: [], encs: [], redraw: [], midi: [], uses: new Set()};
+      S = {init: [], loops: [], keys: [], encs: [], redraw: [], midi: [], uses: new Set(), kits: {}, name: name || 'untitled', opts};
+      for (const k of KITS) S.kits[k.name] = {};
       g.init(workspace);
       for (const block of workspace.getTopBlocks(true)) {
         if (!block.isEnabled()) continue;
         // a loose block outside every event block never runs: leave it out
-        if (!HATS.includes(block.type) && !block.type.startsWith('procedures_def')) continue;
+        if (!ALL_HATS.includes(block.type) && !block.type.startsWith('procedures_def')) continue;
         g.blockToCode(block);
       }
       const definitions = g.finish('').trim();
@@ -406,7 +401,7 @@
       out.push('-- ' + title,
         '-- made with the Verdandi script builder (' + title + '.blocks.json holds the blocks)',
         '-- the builder writes this file again on every save: edit the blocks, not the text', '');
-      if (s.uses.has('engine')) out.push("engine.name = 'PolyPerc'");
+      for (const k of KITS) if (k.prologue) out.push(...k.prologue(s));
       if (s.uses.has('musicutil')) out.push("musicutil = require 'musicutil'");
       if (s.uses.has('sequins')) out.push("sequins = require 'sequins'");
       if (s.uses.has('ui')) out.push("UI = require 'ui'");
@@ -414,6 +409,7 @@
       if (definitions) out.push(definitions, '');
 
       out.push('function init()');
+      for (const k of KITS) if (k.initFirst) out.push(...k.initFirst(s, I, indent));
       if (s.uses.has('frame')) out.push(I + '_blk_frame = 0');
       if (s.uses.has('midi')) out.push(I + '_blk_midi = midi.connect(1)');
       const lines = code => code.replace(/\n$/, '');
@@ -437,7 +433,9 @@
         if (s.uses.has('frame')) out.push(I + I + I + '_blk_frame = _blk_frame + 1');
         out.push(I + I + I + 'redraw()', I + I + 'end', I + 'end)');
       }
+      for (const k of KITS) if (k.initLast) out.push(...k.initLast(s, I, indent));
       out.push('end', '');
+      for (const k of KITS) if (k.functions) out.push(...k.functions(s, I, indent));
 
       if (s.keys.length) {
         out.push('function key(n, z)');
@@ -462,19 +460,37 @@
       return out.filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\n').replace(/\n+$/, '\n');
     }
 
-    return {generate, HATS, TYPES};
+    return {generate, HATS: ALL_HATS, TYPES: ALL.map(d => d.type)};
   }
 
   // the toolbox: built-in Blockly categories plus the norns ones, with ready-made inputs
+  const ORDER = ['Events', 'Sound', 'Music', 'Sequencing', 'Time', 'Looper', 'MIDI', 'Grid', 'Screen',
+    'Widgets', 'Controls', 'Data'];
   function toolbox() {
-    const b = (type, inputs, fields) => ({kind: 'block', type, inputs, fields});
+    const tb = coreToolbox();
+    const ours = tb.contents.slice(0, tb.contents.findIndex(c => c.kind === 'sep'));
+    const rest = tb.contents.slice(ours.length);
+    for (const k of KITS) {
+      for (const cat of k.toolbox || []) {
+        const have = ours.find(c => c.name === cat.name);
+        if (have) have.contents = have.contents.concat(cat.contents);
+        else ours.push({kind: 'category', name: cat.name, colour: cat.colour, contents: cat.contents});
+      }
+    }
+    const rank = c => { const i = ORDER.indexOf(c.name); return i < 0 ? ORDER.length : i; };
+    ours.sort((a, c) => rank(a) - rank(c));
+    return {kind: 'categoryToolbox', contents: ours.concat(rest)};
+  }
+  // a toolbox entry, for kits too
+  function entry(type, inputs, fields) { return {kind: 'block', type, inputs, fields}; }
+
+  function coreToolbox() {
+    const b = entry;
     return {kind: 'categoryToolbox', contents: [
       {kind: 'category', name: 'Events', colour: C.event, contents: [
-        b('nv_init'), b('nv_every'), b('nv_key'), b('nv_enc'), b('nv_enc_delta'), b('nv_redraw'),
-        b('nv_midi_note'), b('nv_midi_note_num'), b('nv_midi_velocity')]},
-      {kind: 'category', name: 'Sound', colour: C.sound, contents: [
-        b('nv_play_note', {NOTE: num(60)}), b('nv_play_hz', {HZ: num(440)}),
-        b('nv_sound_set', {VALUE: num(1200)}),
+        b('nv_init'), b('nv_every'), b('nv_key'), b('nv_enc'), b('nv_enc_delta'), b('nv_redraw')]},
+      {kind: 'category', name: 'MIDI', colour: C.midi, contents: [
+        b('nv_midi_note'), b('nv_midi_note_num'), b('nv_midi_velocity'),
         b('nv_midi_send', {NOTE: num(60), VEL: num(100), LEN: num(0.5), CH: num(1)})]},
       {kind: 'category', name: 'Music', colour: C.music, contents: [
         b('nv_scale_note', {DEGREE: num(1), ROOT: num(60)}, {SCALE: 'Major'}),
@@ -522,5 +538,5 @@
     ]};
   }
 
-  return {register, toolbox, paramId, HATS, RESERVED};
+  return {register, toolbox, kit, entry, num, txt, paramId, luaString, HATS, RESERVED, C};
 }));

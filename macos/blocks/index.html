@@ -6,12 +6,18 @@
 <title>Script Builder</title>
 <link rel="icon" href="../maiden_32.png">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="patcher.css">
 </head>
 <body>
 <header>
   <a class="back" href="../" title="back to maiden">maiden</a>
   <span class="title">script builder</span>
   <label class="name">name <input id="name" spellcheck="false" autocomplete="off" maxlength="40" placeholder="my_script"></label>
+  <nav class="views" role="tablist" aria-label="what to edit">
+    <button role="tab" data-view="blocks" aria-selected="true" title="what the script does">blocks</button>
+    <button role="tab" data-view="sound" aria-selected="false" title="how it sounds: modules and cables">sound</button>
+  </nav>
+  <button id="guide-open" class="guide-open" title="step by step: how to build a script">guide</button>
   <nav>
     <button id="new" title="start with an empty workspace">new</button>
     <button id="open" title="open a script made here, or an example">open</button>
@@ -23,7 +29,11 @@
 </header>
 
 <main>
-  <div id="blockly"></div>
+  <div class="work">
+    <div id="blockly"></div>
+    <div id="patcher" hidden></div>
+    <section id="guide" class="guide" hidden aria-live="polite"></section>
+  </div>
   <aside>
     <section class="preview">
       <div class="preview-head">
@@ -45,6 +55,7 @@
         </div>
       </div>
       <p id="notes" class="notes" aria-live="polite"></p>
+      <canvas id="grid" width="321" height="161" hidden aria-label="the grid of the preview: click a key"></canvas>
     </section>
     <section class="out">
       <div class="tabs" role="tablist">
@@ -73,6 +84,14 @@
 <script src="vendor/blockly/msg/en.js"></script>
 <script src="vendor/fengari/fengari-web.js"></script>
 <script src="blocks.js"></script>
+<script src="blocks_sound.js"></script>
+<script src="blocks_seq.js"></script>
+<script src="blocks_looper.js"></script>
+<script src="blocks_grid.js"></script>
+<script src="blocks_ui.js"></script>
+<script src="weave.js"></script>
+<script src="patcher.js"></script>
+<script src="guide.js"></script>
 <script src="preview.js"></script>
 <script src="app.js"></script>
 </body>

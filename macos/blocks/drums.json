@@ -1,0 +1,846 @@
+{
+ "format": "verdandi-blocks",
+ "version": 2,
+ "name": "drums",
+ "workspace": {
+  "variables": [
+   {
+    "name": "step",
+    "id": "v_step"
+   },
+   {
+    "name": "i",
+    "id": "v_i"
+   }
+  ],
+  "blocks": {
+   "languageVersion": 0,
+   "blocks": [
+    {
+     "type": "nv_every",
+     "fields": {
+      "DIV": "1/4"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_counter",
+        "fields": {
+         "VAR": {
+          "id": "v_step"
+         }
+        },
+        "inputs": {
+         "N": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 16
+           }
+          }
+         }
+        },
+        "next": {
+         "block": {
+          "type": "controls_if",
+          "inputs": {
+           "IF0": {
+            "block": {
+             "type": "nv_euclid",
+             "inputs": {
+              "STEP": {
+               "block": {
+                "type": "variables_get",
+                "fields": {
+                 "VAR": {
+                  "id": "v_step"
+                 }
+                }
+               }
+              },
+              "K": {
+               "shadow": {
+                "type": "math_number",
+                "fields": {
+                 "NUM": 3
+                }
+               }
+              },
+              "N": {
+               "shadow": {
+                "type": "math_number",
+                "fields": {
+                 "NUM": 8
+                }
+               }
+              },
+              "SHIFT": {
+               "shadow": {
+                "type": "math_number",
+                "fields": {
+                 "NUM": 0
+                }
+               }
+              }
+             }
+            }
+           },
+           "DO0": {
+            "block": {
+             "type": "nv_play_note",
+             "inputs": {
+              "NOTE": {
+               "shadow": {
+                "type": "math_number",
+                "fields": {
+                 "NUM": 36
+                }
+               }
+              },
+              "VEL": {
+               "shadow": {
+                "type": "math_number",
+                "fields": {
+                 "NUM": 120
+                }
+               }
+              },
+              "LEN": {
+               "shadow": {
+                "type": "math_number",
+                "fields": {
+                 "NUM": 0.25
+                }
+               }
+              }
+             }
+            }
+           }
+          },
+          "extraState": {
+           "elseIfCount": 0,
+           "hasElse": false
+          },
+          "next": {
+           "block": {
+            "type": "controls_if",
+            "inputs": {
+             "IF0": {
+              "block": {
+               "type": "nv_euclid",
+               "inputs": {
+                "STEP": {
+                 "block": {
+                  "type": "variables_get",
+                  "fields": {
+                   "VAR": {
+                    "id": "v_step"
+                   }
+                  }
+                 }
+                },
+                "K": {
+                 "shadow": {
+                  "type": "math_number",
+                  "fields": {
+                   "NUM": 5
+                  }
+                 }
+                },
+                "N": {
+                 "shadow": {
+                  "type": "math_number",
+                  "fields": {
+                   "NUM": 16
+                  }
+                 }
+                },
+                "SHIFT": {
+                 "shadow": {
+                  "type": "math_number",
+                  "fields": {
+                   "NUM": 2
+                  }
+                 }
+                }
+               }
+              }
+             },
+             "DO0": {
+              "block": {
+               "type": "nv_play_note",
+               "inputs": {
+                "NOTE": {
+                 "shadow": {
+                  "type": "math_number",
+                  "fields": {
+                   "NUM": 50
+                  }
+                 }
+                },
+                "VEL": {
+                 "shadow": {
+                  "type": "math_number",
+                  "fields": {
+                   "NUM": 90
+                  }
+                 }
+                },
+                "LEN": {
+                 "shadow": {
+                  "type": "math_number",
+                  "fields": {
+                   "NUM": 0.25
+                  }
+                 }
+                }
+               }
+              }
+             }
+            },
+            "extraState": {
+             "elseIfCount": 0,
+             "hasElse": false
+            },
+            "next": {
+             "block": {
+              "type": "controls_if",
+              "inputs": {
+               "IF0": {
+                "block": {
+                 "type": "logic_operation",
+                 "fields": {
+                  "OP": "AND"
+                 },
+                 "inputs": {
+                  "A": {
+                   "block": {
+                    "type": "nv_pattern_hit",
+                    "fields": {
+                     "TEXT": "..x...x...x..xx."
+                    },
+                    "inputs": {
+                     "STEP": {
+                      "block": {
+                       "type": "variables_get",
+                       "fields": {
+                        "VAR": {
+                         "id": "v_step"
+                        }
+                       }
+                      }
+                     }
+                    }
+                   }
+                  },
+                  "B": {
+                   "block": {
+                    "type": "nv_chance",
+                    "inputs": {
+                     "P": {
+                      "shadow": {
+                       "type": "math_number",
+                       "fields": {
+                        "NUM": 80
+                       }
+                      }
+                     }
+                    }
+                   }
+                  }
+                 }
+                }
+               },
+               "DO0": {
+                "block": {
+                 "type": "nv_play_note",
+                 "inputs": {
+                  "NOTE": {
+                   "shadow": {
+                    "type": "math_number",
+                    "fields": {
+                     "NUM": 86
+                    }
+                   }
+                  },
+                  "VEL": {
+                   "shadow": {
+                    "type": "math_number",
+                    "fields": {
+                     "NUM": 70
+                    }
+                   }
+                  },
+                  "LEN": {
+                   "shadow": {
+                    "type": "math_number",
+                    "fields": {
+                     "NUM": 0.1
+                    }
+                   }
+                  }
+                 }
+                }
+               }
+              },
+              "extraState": {
+               "elseIfCount": 0,
+               "hasElse": false
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_enc",
+     "fields": {
+      "ENC": "2"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_tempo_set",
+        "inputs": {
+         "BPM": {
+          "block": {
+           "type": "math_arithmetic",
+           "fields": {
+            "OP": "ADD"
+           },
+           "inputs": {
+            "A": {
+             "block": {
+              "type": "nv_tempo_get"
+             }
+            },
+            "B": {
+             "block": {
+              "type": "nv_enc_delta"
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_redraw",
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_screen_text",
+        "fields": {
+         "ALIGN": "text"
+        },
+        "inputs": {
+         "TEXT": {
+          "shadow": {
+           "type": "text",
+           "fields": {
+            "TEXT": "drums"
+           }
+          }
+         },
+         "X": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 2
+           }
+          }
+         },
+         "Y": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 8
+           }
+          }
+         },
+         "LEVEL": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 15
+           }
+          }
+         }
+        },
+        "next": {
+         "block": {
+          "type": "nv_screen_text",
+          "fields": {
+           "ALIGN": "text_right"
+          },
+          "inputs": {
+           "TEXT": {
+            "block": {
+             "type": "text_join",
+             "inputs": {
+              "ADD0": {
+               "block": {
+                "type": "math_round",
+                "fields": {
+                 "OP": "ROUND"
+                },
+                "inputs": {
+                 "NUM": {
+                  "block": {
+                   "type": "nv_tempo_get"
+                  }
+                 }
+                }
+               }
+              },
+              "ADD1": {
+               "block": {
+                "type": "text",
+                "fields": {
+                 "TEXT": " bpm"
+                }
+               }
+              }
+             },
+             "extraState": {
+              "itemCount": 2
+             }
+            }
+           },
+           "X": {
+            "shadow": {
+             "type": "math_number",
+             "fields": {
+              "NUM": 126
+             }
+            }
+           },
+           "Y": {
+            "shadow": {
+             "type": "math_number",
+             "fields": {
+              "NUM": 8
+             }
+            }
+           },
+           "LEVEL": {
+            "shadow": {
+             "type": "math_number",
+             "fields": {
+              "NUM": 6
+             }
+            }
+           }
+          },
+          "next": {
+           "block": {
+            "type": "controls_for",
+            "fields": {
+             "VAR": {
+              "id": "v_i"
+             }
+            },
+            "inputs": {
+             "FROM": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 1
+               }
+              }
+             },
+             "TO": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 16
+               }
+              }
+             },
+             "BY": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 1
+               }
+              }
+             },
+             "DO": {
+              "block": {
+               "type": "nv_screen_rect",
+               "fields": {
+                "MODE": "fill"
+               },
+               "inputs": {
+                "X": {
+                 "block": {
+                  "type": "math_arithmetic",
+                  "fields": {
+                   "OP": "ADD"
+                  },
+                  "inputs": {
+                   "A": {
+                    "block": {
+                     "type": "math_number",
+                     "fields": {
+                      "NUM": 2
+                     }
+                    }
+                   },
+                   "B": {
+                    "block": {
+                     "type": "math_arithmetic",
+                     "fields": {
+                      "OP": "MULTIPLY"
+                     },
+                     "inputs": {
+                      "A": {
+                       "block": {
+                        "type": "math_arithmetic",
+                        "fields": {
+                         "OP": "MINUS"
+                        },
+                        "inputs": {
+                         "A": {
+                          "block": {
+                           "type": "variables_get",
+                           "fields": {
+                            "VAR": {
+                             "id": "v_i"
+                            }
+                           }
+                          }
+                         },
+                         "B": {
+                          "block": {
+                           "type": "math_number",
+                           "fields": {
+                            "NUM": 1
+                           }
+                          }
+                         }
+                        }
+                       }
+                      },
+                      "B": {
+                       "block": {
+                        "type": "math_number",
+                        "fields": {
+                         "NUM": 7.8
+                        }
+                       }
+                      }
+                     }
+                    }
+                   }
+                  }
+                 }
+                },
+                "Y": {
+                 "shadow": {
+                  "type": "math_number",
+                  "fields": {
+                   "NUM": 26
+                  }
+                 }
+                },
+                "W": {
+                 "shadow": {
+                  "type": "math_number",
+                  "fields": {
+                   "NUM": 6
+                  }
+                 }
+                },
+                "H": {
+                 "block": {
+                  "type": "logic_ternary",
+                  "inputs": {
+                   "IF": {
+                    "block": {
+                     "type": "nv_euclid",
+                     "inputs": {
+                      "STEP": {
+                       "block": {
+                        "type": "variables_get",
+                        "fields": {
+                         "VAR": {
+                          "id": "v_i"
+                         }
+                        }
+                       }
+                      },
+                      "K": {
+                       "shadow": {
+                        "type": "math_number",
+                        "fields": {
+                         "NUM": 3
+                        }
+                       }
+                      },
+                      "N": {
+                       "shadow": {
+                        "type": "math_number",
+                        "fields": {
+                         "NUM": 8
+                        }
+                       }
+                      },
+                      "SHIFT": {
+                       "shadow": {
+                        "type": "math_number",
+                        "fields": {
+                         "NUM": 0
+                        }
+                       }
+                      }
+                     }
+                    }
+                   },
+                   "THEN": {
+                    "block": {
+                     "type": "math_number",
+                     "fields": {
+                      "NUM": 16
+                     }
+                    }
+                   },
+                   "ELSE": {
+                    "block": {
+                     "type": "math_number",
+                     "fields": {
+                      "NUM": 6
+                     }
+                    }
+                   }
+                  }
+                 }
+                },
+                "LEVEL": {
+                 "block": {
+                  "type": "logic_ternary",
+                  "inputs": {
+                   "IF": {
+                    "block": {
+                     "type": "logic_compare",
+                     "fields": {
+                      "OP": "EQ"
+                     },
+                     "inputs": {
+                      "A": {
+                       "block": {
+                        "type": "variables_get",
+                        "fields": {
+                         "VAR": {
+                          "id": "v_i"
+                         }
+                        }
+                       }
+                      },
+                      "B": {
+                       "block": {
+                        "type": "variables_get",
+                        "fields": {
+                         "VAR": {
+                          "id": "v_step"
+                         }
+                        }
+                       }
+                      }
+                     }
+                    }
+                   },
+                   "THEN": {
+                    "block": {
+                     "type": "math_number",
+                     "fields": {
+                      "NUM": 15
+                     }
+                    }
+                   },
+                   "ELSE": {
+                    "block": {
+                     "type": "math_number",
+                     "fields": {
+                      "NUM": 3
+                     }
+                    }
+                   }
+                  }
+                 }
+                }
+               }
+              }
+             }
+            },
+            "next": {
+             "block": {
+              "type": "nv_screen_text",
+              "fields": {
+               "ALIGN": "text"
+              },
+              "inputs": {
+               "TEXT": {
+                "shadow": {
+                 "type": "text",
+                 "fields": {
+                  "TEXT": "E2 tempo"
+                 }
+                }
+               },
+               "X": {
+                "shadow": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 2
+                 }
+                }
+               },
+               "Y": {
+                "shadow": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 62
+                 }
+                }
+               },
+               "LEVEL": {
+                "shadow": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 3
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   ]
+  }
+ },
+ "patch": {
+  "enabled": true,
+  "modules": [
+   {
+    "id": "voice",
+    "type": "voice",
+    "x": 20,
+    "y": 30,
+    "params": {
+     "voices": 4
+    }
+   },
+   {
+    "id": "env1",
+    "type": "env",
+    "x": 250,
+    "y": 330,
+    "params": {
+     "a": 0.001,
+     "d": 0.12,
+     "s": 0,
+     "r": 0.05,
+     "vel": 0
+    }
+   },
+   {
+    "id": "osc1",
+    "type": "osc",
+    "x": 250,
+    "y": 30,
+    "params": {
+     "wave": 0,
+     "fm": 36
+    }
+   },
+   {
+    "id": "env2",
+    "type": "env",
+    "x": 480,
+    "y": 330,
+    "params": {
+     "a": 0.001,
+     "d": 0.5,
+     "s": 0,
+     "r": 0.3,
+     "curve": -6
+    }
+   },
+   {
+    "id": "vca1",
+    "type": "vca",
+    "x": 480,
+    "y": 30,
+    "params": {}
+   },
+   {
+    "id": "drive1",
+    "type": "drive",
+    "x": 710,
+    "y": 30,
+    "params": {
+     "amount": 3,
+     "level": 0.8
+    }
+   },
+   {
+    "id": "out",
+    "type": "out",
+    "x": 940,
+    "y": 30,
+    "params": {
+     "level": 0.8
+    }
+   }
+  ],
+  "cables": [
+   {
+    "from": "env1.out",
+    "to": "osc1.fm"
+   },
+   {
+    "from": "osc1.out",
+    "to": "vca1.in"
+   },
+   {
+    "from": "env2.out",
+    "to": "vca1.cv"
+   },
+   {
+    "from": "vca1.out",
+    "to": "drive1.in"
+   },
+   {
+    "from": "drive1.out",
+    "to": "out.in"
+   }
+  ],
+  "fx": [
+   {
+    "id": "comp1",
+    "type": "fx_comp",
+    "params": {}
+   }
+  ],
+  "main": {
+   "input": 0,
+   "level": 1
+  }
+ }
+}

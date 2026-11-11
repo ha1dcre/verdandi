@@ -1,0 +1,807 @@
+{
+ "format": "verdandi-blocks",
+ "version": 2,
+ "name": "looper",
+ "workspace": {
+  "variables": [],
+  "blocks": {
+   "languageVersion": 0,
+   "blocks": [
+    {
+     "type": "nv_init",
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_looper_setup",
+        "fields": {
+         "N": "1",
+         "MAX": 60,
+         "SRC": "in"
+        },
+        "next": {
+         "block": {
+          "type": "nv_param_add",
+          "fields": {
+           "NAME": "speed",
+           "MIN": -2,
+           "MAX": 2,
+           "DEFAULT": 1
+          },
+          "next": {
+           "block": {
+            "type": "nv_param_add",
+            "fields": {
+             "NAME": "volume",
+             "MIN": 0,
+             "MAX": 1.5,
+             "DEFAULT": 1
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_key",
+     "fields": {
+      "KEY": "2",
+      "STATE": "1"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "controls_if",
+        "inputs": {
+         "IF0": {
+          "block": {
+           "type": "nv_looper_is",
+           "fields": {
+            "N": "1",
+            "STATE": "recording"
+           }
+          }
+         },
+         "DO0": {
+          "block": {
+           "type": "nv_looper_do",
+           "fields": {
+            "N": "1",
+            "ACTION": "finish"
+           }
+          }
+         },
+         "IF1": {
+          "block": {
+           "type": "nv_looper_is",
+           "fields": {
+            "N": "1",
+            "STATE": "overdubbing"
+           }
+          }
+         },
+         "DO1": {
+          "block": {
+           "type": "nv_looper_do",
+           "fields": {
+            "N": "1",
+            "ACTION": "overdub off"
+           }
+          }
+         },
+         "IF2": {
+          "block": {
+           "type": "nv_looper_is",
+           "fields": {
+            "N": "1",
+            "STATE": "empty"
+           }
+          }
+         },
+         "DO2": {
+          "block": {
+           "type": "nv_looper_do",
+           "fields": {
+            "N": "1",
+            "ACTION": "record"
+           }
+          }
+         },
+         "ELSE": {
+          "block": {
+           "type": "nv_looper_do",
+           "fields": {
+            "N": "1",
+            "ACTION": "overdub"
+           }
+          }
+         }
+        },
+        "extraState": {
+         "elseIfCount": 2,
+         "hasElse": true
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_key",
+     "fields": {
+      "KEY": "3",
+      "STATE": "1"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "controls_if",
+        "inputs": {
+         "IF0": {
+          "block": {
+           "type": "nv_looper_is",
+           "fields": {
+            "N": "1",
+            "STATE": "recording"
+           }
+          }
+         },
+         "DO0": {
+          "block": {
+           "type": "nv_looper_do",
+           "fields": {
+            "N": "1",
+            "ACTION": "finish"
+           }
+          }
+         },
+         "IF1": {
+          "block": {
+           "type": "logic_operation",
+           "fields": {
+            "OP": "OR"
+           },
+           "inputs": {
+            "A": {
+             "block": {
+              "type": "nv_looper_is",
+              "fields": {
+               "N": "1",
+               "STATE": "playing"
+              }
+             }
+            },
+            "B": {
+             "block": {
+              "type": "nv_looper_is",
+              "fields": {
+               "N": "1",
+               "STATE": "overdubbing"
+              }
+             }
+            }
+           }
+          }
+         },
+         "DO1": {
+          "block": {
+           "type": "nv_looper_do",
+           "fields": {
+            "N": "1",
+            "ACTION": "stop"
+           }
+          }
+         },
+         "ELSE": {
+          "block": {
+           "type": "nv_looper_do",
+           "fields": {
+            "N": "1",
+            "ACTION": "play"
+           }
+          }
+         }
+        },
+        "extraState": {
+         "elseIfCount": 1,
+         "hasElse": true
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_enc",
+     "fields": {
+      "ENC": "3"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_param_change",
+        "fields": {
+         "NAME": "speed"
+        },
+        "inputs": {
+         "DELTA": {
+          "block": {
+           "type": "math_arithmetic",
+           "fields": {
+            "OP": "MULTIPLY"
+           },
+           "inputs": {
+            "A": {
+             "block": {
+              "type": "nv_enc_delta"
+             }
+            },
+            "B": {
+             "block": {
+              "type": "math_number",
+              "fields": {
+               "NUM": 0.05
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_enc",
+     "fields": {
+      "ENC": "2"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_param_change",
+        "fields": {
+         "NAME": "volume"
+        },
+        "inputs": {
+         "DELTA": {
+          "block": {
+           "type": "math_arithmetic",
+           "fields": {
+            "OP": "MULTIPLY"
+           },
+           "inputs": {
+            "A": {
+             "block": {
+              "type": "nv_enc_delta"
+             }
+            },
+            "B": {
+             "block": {
+              "type": "math_number",
+              "fields": {
+               "NUM": 0.05
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_param_changed",
+     "fields": {
+      "NAME": "speed"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_looper_set",
+        "fields": {
+         "N": "1",
+         "WHAT": "speed"
+        },
+        "inputs": {
+         "VALUE": {
+          "block": {
+           "type": "nv_param_value"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_param_changed",
+     "fields": {
+      "NAME": "volume"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_looper_set",
+        "fields": {
+         "N": "1",
+         "WHAT": "volume"
+        },
+        "inputs": {
+         "VALUE": {
+          "block": {
+           "type": "nv_param_value"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_redraw",
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_screen_text",
+        "fields": {
+         "ALIGN": "text"
+        },
+        "inputs": {
+         "TEXT": {
+          "shadow": {
+           "type": "text",
+           "fields": {
+            "TEXT": "looper"
+           }
+          }
+         },
+         "X": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 2
+           }
+          }
+         },
+         "Y": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 8
+           }
+          }
+         },
+         "LEVEL": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 15
+           }
+          }
+         }
+        },
+        "next": {
+         "block": {
+          "type": "nv_screen_text",
+          "fields": {
+           "ALIGN": "text_right"
+          },
+          "inputs": {
+           "TEXT": {
+            "block": {
+             "type": "logic_ternary",
+             "inputs": {
+              "IF": {
+               "block": {
+                "type": "nv_looper_is",
+                "fields": {
+                 "N": "1",
+                 "STATE": "recording"
+                }
+               }
+              },
+              "THEN": {
+               "block": {
+                "type": "text",
+                "fields": {
+                 "TEXT": "recording"
+                }
+               }
+              },
+              "ELSE": {
+               "block": {
+                "type": "logic_ternary",
+                "inputs": {
+                 "IF": {
+                  "block": {
+                   "type": "nv_looper_is",
+                   "fields": {
+                    "N": "1",
+                    "STATE": "overdubbing"
+                   }
+                  }
+                 },
+                 "THEN": {
+                  "block": {
+                   "type": "text",
+                   "fields": {
+                    "TEXT": "overdub"
+                   }
+                  }
+                 },
+                 "ELSE": {
+                  "block": {
+                   "type": "logic_ternary",
+                   "inputs": {
+                    "IF": {
+                     "block": {
+                      "type": "nv_looper_is",
+                      "fields": {
+                       "N": "1",
+                       "STATE": "playing"
+                      }
+                     }
+                    },
+                    "THEN": {
+                     "block": {
+                      "type": "text",
+                      "fields": {
+                       "TEXT": "playing"
+                      }
+                     }
+                    },
+                    "ELSE": {
+                     "block": {
+                      "type": "logic_ternary",
+                      "inputs": {
+                       "IF": {
+                        "block": {
+                         "type": "nv_looper_is",
+                         "fields": {
+                          "N": "1",
+                          "STATE": "empty"
+                         }
+                        }
+                       },
+                       "THEN": {
+                        "block": {
+                         "type": "text",
+                         "fields": {
+                          "TEXT": "K2 records"
+                         }
+                        }
+                       },
+                       "ELSE": {
+                        "block": {
+                         "type": "text",
+                         "fields": {
+                          "TEXT": "stopped"
+                         }
+                        }
+                       }
+                      }
+                     }
+                    }
+                   }
+                  }
+                 }
+                }
+               }
+              }
+             }
+            }
+           },
+           "X": {
+            "shadow": {
+             "type": "math_number",
+             "fields": {
+              "NUM": 126
+             }
+            }
+           },
+           "Y": {
+            "shadow": {
+             "type": "math_number",
+             "fields": {
+              "NUM": 8
+             }
+            }
+           },
+           "LEVEL": {
+            "shadow": {
+             "type": "math_number",
+             "fields": {
+              "NUM": 8
+             }
+            }
+           }
+          },
+          "next": {
+           "block": {
+            "type": "nv_looper_wave",
+            "fields": {
+             "N": "1"
+            },
+            "inputs": {
+             "X": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 0
+               }
+              }
+             },
+             "Y": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 14
+               }
+              }
+             },
+             "W": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 128
+               }
+              }
+             },
+             "H": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 32
+               }
+              }
+             }
+            },
+            "next": {
+             "block": {
+              "type": "nv_screen_text",
+              "fields": {
+               "ALIGN": "text"
+              },
+              "inputs": {
+               "TEXT": {
+                "block": {
+                 "type": "text_join",
+                 "inputs": {
+                  "ADD0": {
+                   "block": {
+                    "type": "text",
+                    "fields": {
+                     "TEXT": "speed "
+                    }
+                   }
+                  },
+                  "ADD1": {
+                   "block": {
+                    "type": "math_round",
+                    "fields": {
+                     "OP": "ROUND"
+                    },
+                    "inputs": {
+                     "NUM": {
+                      "block": {
+                       "type": "math_arithmetic",
+                       "fields": {
+                        "OP": "MULTIPLY"
+                       },
+                       "inputs": {
+                        "A": {
+                         "block": {
+                          "type": "nv_param_get",
+                          "fields": {
+                           "NAME": "speed"
+                          }
+                         }
+                        },
+                        "B": {
+                         "block": {
+                          "type": "math_number",
+                          "fields": {
+                           "NUM": 100
+                          }
+                         }
+                        }
+                       }
+                      }
+                     }
+                    }
+                   }
+                  },
+                  "ADD2": {
+                   "block": {
+                    "type": "text",
+                    "fields": {
+                     "TEXT": "%"
+                    }
+                   }
+                  }
+                 },
+                 "extraState": {
+                  "itemCount": 3
+                 }
+                }
+               },
+               "X": {
+                "shadow": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 2
+                 }
+                }
+               },
+               "Y": {
+                "shadow": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 54
+                 }
+                }
+               },
+               "LEVEL": {
+                "shadow": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 4
+                 }
+                }
+               }
+              },
+              "next": {
+               "block": {
+                "type": "nv_screen_text",
+                "fields": {
+                 "ALIGN": "text_right"
+                },
+                "inputs": {
+                 "TEXT": {
+                  "shadow": {
+                   "type": "text",
+                   "fields": {
+                    "TEXT": "K2 rec/dub  K3 play"
+                   }
+                  }
+                 },
+                 "X": {
+                  "shadow": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 126
+                   }
+                  }
+                 },
+                 "Y": {
+                  "shadow": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 62
+                   }
+                  }
+                 },
+                 "LEVEL": {
+                  "shadow": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 3
+                   }
+                  }
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   ]
+  }
+ },
+ "patch": {
+  "enabled": false,
+  "modules": [
+   {
+    "id": "voice",
+    "type": "voice",
+    "x": 20,
+    "y": 30,
+    "params": {}
+   },
+   {
+    "id": "osc1",
+    "type": "osc",
+    "x": 250,
+    "y": 30,
+    "params": {
+     "wave": 2
+    }
+   },
+   {
+    "id": "env1",
+    "type": "env",
+    "x": 250,
+    "y": 330,
+    "params": {
+     "a": 0.002,
+     "d": 0.4,
+     "s": 0.2,
+     "r": 0.4
+    }
+   },
+   {
+    "id": "filter1",
+    "type": "filter",
+    "x": 480,
+    "y": 30,
+    "params": {
+     "cutoff": 900,
+     "mod": 3,
+     "track": 0.3
+    }
+   },
+   {
+    "id": "vca1",
+    "type": "vca",
+    "x": 710,
+    "y": 30,
+    "params": {}
+   },
+   {
+    "id": "out",
+    "type": "out",
+    "x": 940,
+    "y": 30,
+    "params": {
+     "level": 0.5
+    }
+   }
+  ],
+  "cables": [
+   {
+    "from": "osc1.out",
+    "to": "filter1.in"
+   },
+   {
+    "from": "env1.out",
+    "to": "filter1.mod"
+   },
+   {
+    "from": "filter1.out",
+    "to": "vca1.in"
+   },
+   {
+    "from": "env1.out",
+    "to": "vca1.cv"
+   },
+   {
+    "from": "vca1.out",
+    "to": "out.in"
+   }
+  ],
+  "fx": [
+   {
+    "id": "reverb1",
+    "type": "fx_reverb",
+    "params": {
+     "mix": 0.2
+    }
+   }
+  ],
+  "main": {
+   "input": 0,
+   "level": 1
+  }
+ }
+}

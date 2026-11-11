@@ -31,14 +31,26 @@ screen.text_extents = function(s) return S:text_width(tostring(s)), 6 end
 screen.text_trim = function(s) return tostring(s) end
 screen.ping = function() end
 
--- engine: PolyPerc's commands; notes show in the preview, sound comes from Run
-local engine_commands = {hz = 1, amp = 1, pw = 1, release = 1, cutoff = 1, gain = 1, pan = 1}
-engine = setmetatable({}, {__index = function(_, k)
-  if engine_commands[k] then
-    return function(v) host:engine(k, v) end
-  end
-  return function() end
-end})
+-- engine: Weave's commands; notes show in the preview, sound comes from Run
+local sounding = {}
+engine = {
+  patch = function() end, set = function() end, load_sample = function() end,
+  note_on = function(id, hz, vel) sounding[id] = true; host:engine("note_on", hz, vel) end,
+  note_off = function(id) sounding[id] = nil end,
+  all_off = function() sounding = {} end, kill = function() sounding = {} end,
+}
+poll = {set = function(name, f)
+  local p = {time = 0.1}
+  function p:start() _preview_polls[#_preview_polls + 1] = function()
+    local n = 0
+    for _ in pairs(sounding) do n = n + 1 end
+    f(n)
+  end end
+  function p:stop() end
+  function p:update() end
+  return p
+end}
+_preview_polls = {}
 
 controlspec = {new = function(min, max, warp, step, default, units)
   return {minval = min, maxval = max, warp = warp, step = step, default = default or min, units = units}
@@ -57,6 +69,19 @@ function params:add_number(id, name, min, max, default)
 end
 function params:add_separator() end
 function params:add_group() end
+function params:add_option(id, name, options, default)
+  info[id] = {id = id, name = name or id, options = options, controlspec = controlspec.new(1, #options, "lin", 1, default or 1)}
+  values[id] = default or 1
+end
+function params:add_binary(id, name, behavior, default)
+  info[id] = {id = id, name = name or id, controlspec = controlspec.new(0, 1, "lin", 1, default or 0)}
+  values[id] = default or 0
+end
+function params:set_action(id, f) self:lookup_param(id).action = f end
+function params:string(id)
+  local p = self:lookup_param(id)
+  return p.options and p.options[values[id]] or tostring(values[id])
+end
 function params:bang() end
 function params:lookup_param(id)
   return info[id] or error("no control " .. tostring(id), 2)
@@ -70,6 +95,7 @@ function params:set(id, v)
   if type(v) ~= "number" then error("control " .. id .. " set to a " .. type(v), 2) end
   values[id] = util.clamp(v, p.controlspec.minval, p.controlspec.maxval)
   host:param(id, values[id])
+  if p.action then p.action(values[id]) end
 end
 function params:delta(id, d)
   local p = self:lookup_param(id)
@@ -120,18 +146,89 @@ midi = {
     return {
       note_on = function(_, note, vel, ch) host:midi("note_on", note, vel, ch or 1) end,
       note_off = function(_, note, vel, ch) host:midi("note_off", note, vel, ch or 1) end,
+      cc = function() end,
     }
   end,
   to_msg = function() return {} end,
 }
 
+-- grid and arc: the grid lights show under the preview, its keys can be clicked there
+local grid_dev = {}
+function grid_dev:led(x, y, l) host:grid_led(x, y, l) end
+function grid_dev:all(l) host:grid_all(l) end
+function grid_dev:refresh() host:grid_refresh() end
+grid = {connect = function() host:grid_used(); return grid_dev end}
+local arc_dev = {}
+function arc_dev:led() end
+function arc_dev:all() end
+function arc_dev:refresh() end
+function arc_dev:segment() end
+arc = {connect = function() return arc_dev end}
+function _preview_grid_key(x, y, z)
+  if grid_dev.key then grid_dev.key(x, y, z) end
+end
+
+-- softcut: the playheads move (loops, rate, position) and report their phase; there is no
+-- audio in the page, so a waveform is a stand-in shape
+local cut = {}
+local function voice(v)
+  cut[v] = cut[v] or {play = 0, rate = 1, ls = 0, le = 1, pos = 0, rec = 0}
+  return cut[v]
+end
+local phase_cb, render_cb
+softcut = setmetatable({
+  play = function(v, x) voice(v).play = x end,
+  rec = function(v, x) voice(v).rec = x end,
+  rate = function(v, x) voice(v).rate = x end,
+  loop_start = function(v, x) voice(v).ls = x end,
+  loop_end = function(v, x) voice(v).le = x end,
+  position = function(v, x) voice(v).pos = x end,
+  event_phase = function(f) phase_cb = f end,
+  event_render = function(f) render_cb = f end,
+  render_buffer = function(ch, start, dur, n)
+    if not render_cb then return end
+    local s = {}
+    for i = 1, math.floor(n) do
+      local t = start + dur * i / n
+      s[i] = (math.sin(t * 7.1) * 0.5 + math.sin(t * 23.7) * 0.3) * (0.4 + 0.6 * math.abs(math.sin(t * 1.3)))
+    end
+    render_cb(ch, start, dur / n, s)
+  end,
+}, {__index = function() return function() end end})
+audio = setmetatable({file_info = function() return 1, 4 * 48000, 48000 end}, {__index = function() return function() end end})
+local function softcut_tick(dt)
+  for v, c in pairs(cut) do
+    if c.play == 1 then
+      c.pos = c.pos + dt * c.rate
+      local len = c.le - c.ls
+      if len > 0 then
+        if c.pos >= c.le then c.pos = c.ls + (c.pos - c.le) % len end
+        if c.pos < c.ls then c.pos = c.le - (c.ls - c.pos) % len end
+      end
+      if phase_cb then phase_cb(v, c.pos) end
+    end
+  end
+end
+
+-- data the script remembers: kept while the preview runs
+local files = {}
+tab.save = function(t, f) files[f] = t end
+tab.load = function(f) return files[f] end
+util.file_exists = function(f) return files[f] ~= nil end
+util.make_dir = function() end
+_path = {audio = "/dust/audio/", data = "/dust/data/"}
+norns = {state = {data = "/dust/data/preview/", name = "preview"}}
+
 function _preview_init()
   if init then init() end
 end
+util.time = function() return now end
 function _preview_tick(t)
   local dt = t - now
   now = t
   beats = beats + dt / beat_sec()
+  softcut_tick(dt)
+  for _, p in ipairs(_preview_polls) do p() end
   -- the threads due now, oldest first
   local due = {}
   for id, th in pairs(threads) do

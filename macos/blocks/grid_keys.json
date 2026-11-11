@@ -1,0 +1,780 @@
+{
+ "format": "verdandi-blocks",
+ "version": 2,
+ "name": "grid_keys",
+ "workspace": {
+  "variables": [
+   {
+    "name": "last",
+    "id": "v_last"
+   },
+   {
+    "name": "x",
+    "id": "v_x"
+   },
+   {
+    "name": "y",
+    "id": "v_y"
+   }
+  ],
+  "blocks": {
+   "languageVersion": 0,
+   "blocks": [
+    {
+     "type": "nv_grid_key",
+     "fields": {
+      "STATE": "1"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "variables_set",
+        "fields": {
+         "VAR": {
+          "id": "v_last"
+         }
+        },
+        "inputs": {
+         "VALUE": {
+          "block": {
+           "type": "math_arithmetic",
+           "fields": {
+            "OP": "ADD"
+           },
+           "inputs": {
+            "A": {
+             "block": {
+              "type": "math_arithmetic",
+              "fields": {
+               "OP": "ADD"
+              },
+              "inputs": {
+               "A": {
+                "block": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 40
+                 }
+                }
+               },
+               "B": {
+                "block": {
+                 "type": "nv_grid_x"
+                }
+               }
+              }
+             }
+            },
+            "B": {
+             "block": {
+              "type": "math_arithmetic",
+              "fields": {
+               "OP": "MULTIPLY"
+              },
+              "inputs": {
+               "A": {
+                "block": {
+                 "type": "math_arithmetic",
+                 "fields": {
+                  "OP": "MINUS"
+                 },
+                 "inputs": {
+                  "A": {
+                   "block": {
+                    "type": "math_number",
+                    "fields": {
+                     "NUM": 8
+                    }
+                   }
+                  },
+                  "B": {
+                   "block": {
+                    "type": "nv_grid_y"
+                   }
+                  }
+                 }
+                }
+               },
+               "B": {
+                "block": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 5
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        },
+        "next": {
+         "block": {
+          "type": "nv_note_on",
+          "inputs": {
+           "NOTE": {
+            "block": {
+             "type": "variables_get",
+             "fields": {
+              "VAR": {
+               "id": "v_last"
+              }
+             }
+            }
+           },
+           "VEL": {
+            "shadow": {
+             "type": "math_number",
+             "fields": {
+              "NUM": 100
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_grid_key",
+     "fields": {
+      "STATE": "0"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_note_off",
+        "inputs": {
+         "NOTE": {
+          "block": {
+           "type": "math_arithmetic",
+           "fields": {
+            "OP": "ADD"
+           },
+           "inputs": {
+            "A": {
+             "block": {
+              "type": "math_arithmetic",
+              "fields": {
+               "OP": "ADD"
+              },
+              "inputs": {
+               "A": {
+                "block": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 40
+                 }
+                }
+               },
+               "B": {
+                "block": {
+                 "type": "nv_grid_x"
+                }
+               }
+              }
+             }
+            },
+            "B": {
+             "block": {
+              "type": "math_arithmetic",
+              "fields": {
+               "OP": "MULTIPLY"
+              },
+              "inputs": {
+               "A": {
+                "block": {
+                 "type": "math_arithmetic",
+                 "fields": {
+                  "OP": "MINUS"
+                 },
+                 "inputs": {
+                  "A": {
+                   "block": {
+                    "type": "math_number",
+                    "fields": {
+                     "NUM": 8
+                    }
+                   }
+                  },
+                  "B": {
+                   "block": {
+                    "type": "nv_grid_y"
+                   }
+                  }
+                 }
+                }
+               },
+               "B": {
+                "block": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 5
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_grid_draw",
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "controls_for",
+        "fields": {
+         "VAR": {
+          "id": "v_x"
+         }
+        },
+        "inputs": {
+         "FROM": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 1
+           }
+          }
+         },
+         "TO": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 16
+           }
+          }
+         },
+         "BY": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 1
+           }
+          }
+         },
+         "DO": {
+          "block": {
+           "type": "controls_for",
+           "fields": {
+            "VAR": {
+             "id": "v_y"
+            }
+           },
+           "inputs": {
+            "FROM": {
+             "shadow": {
+              "type": "math_number",
+              "fields": {
+               "NUM": 1
+              }
+             }
+            },
+            "TO": {
+             "shadow": {
+              "type": "math_number",
+              "fields": {
+               "NUM": 8
+              }
+             }
+            },
+            "BY": {
+             "shadow": {
+              "type": "math_number",
+              "fields": {
+               "NUM": 1
+              }
+             }
+            },
+            "DO": {
+             "block": {
+              "type": "nv_grid_led",
+              "inputs": {
+               "X": {
+                "block": {
+                 "type": "variables_get",
+                 "fields": {
+                  "VAR": {
+                   "id": "v_x"
+                  }
+                 }
+                }
+               },
+               "Y": {
+                "block": {
+                 "type": "variables_get",
+                 "fields": {
+                  "VAR": {
+                   "id": "v_y"
+                  }
+                 }
+                }
+               },
+               "LEVEL": {
+                "block": {
+                 "type": "logic_ternary",
+                 "inputs": {
+                  "IF": {
+                   "block": {
+                    "type": "nv_grid_held",
+                    "inputs": {
+                     "X": {
+                      "block": {
+                       "type": "variables_get",
+                       "fields": {
+                        "VAR": {
+                         "id": "v_x"
+                        }
+                       }
+                      }
+                     },
+                     "Y": {
+                      "block": {
+                       "type": "variables_get",
+                       "fields": {
+                        "VAR": {
+                         "id": "v_y"
+                        }
+                       }
+                      }
+                     }
+                    }
+                   }
+                  },
+                  "THEN": {
+                   "block": {
+                    "type": "math_number",
+                    "fields": {
+                     "NUM": 15
+                    }
+                   }
+                  },
+                  "ELSE": {
+                   "block": {
+                    "type": "logic_ternary",
+                    "inputs": {
+                     "IF": {
+                      "block": {
+                       "type": "logic_compare",
+                       "fields": {
+                        "OP": "EQ"
+                       },
+                       "inputs": {
+                        "A": {
+                         "block": {
+                          "type": "math_modulo",
+                          "inputs": {
+                           "DIVIDEND": {
+                            "block": {
+                             "type": "math_arithmetic",
+                             "fields": {
+                              "OP": "ADD"
+                             },
+                             "inputs": {
+                              "A": {
+                               "block": {
+                                "type": "math_arithmetic",
+                                "fields": {
+                                 "OP": "ADD"
+                                },
+                                "inputs": {
+                                 "A": {
+                                  "block": {
+                                   "type": "math_number",
+                                   "fields": {
+                                    "NUM": 40
+                                   }
+                                  }
+                                 },
+                                 "B": {
+                                  "block": {
+                                   "type": "variables_get",
+                                   "fields": {
+                                    "VAR": {
+                                     "id": "v_x"
+                                    }
+                                   }
+                                  }
+                                 }
+                                }
+                               }
+                              },
+                              "B": {
+                               "block": {
+                                "type": "math_arithmetic",
+                                "fields": {
+                                 "OP": "MULTIPLY"
+                                },
+                                "inputs": {
+                                 "A": {
+                                  "block": {
+                                   "type": "math_arithmetic",
+                                   "fields": {
+                                    "OP": "MINUS"
+                                   },
+                                   "inputs": {
+                                    "A": {
+                                     "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                       "NUM": 8
+                                      }
+                                     }
+                                    },
+                                    "B": {
+                                     "block": {
+                                      "type": "variables_get",
+                                      "fields": {
+                                       "VAR": {
+                                        "id": "v_y"
+                                       }
+                                      }
+                                     }
+                                    }
+                                   }
+                                  }
+                                 },
+                                 "B": {
+                                  "block": {
+                                   "type": "math_number",
+                                   "fields": {
+                                    "NUM": 5
+                                   }
+                                  }
+                                 }
+                                }
+                               }
+                              }
+                             }
+                            }
+                           },
+                           "DIVISOR": {
+                            "shadow": {
+                             "type": "math_number",
+                             "fields": {
+                              "NUM": 12
+                             }
+                            }
+                           }
+                          }
+                         }
+                        },
+                        "B": {
+                         "block": {
+                          "type": "math_number",
+                          "fields": {
+                           "NUM": 0
+                          }
+                         }
+                        }
+                       }
+                      }
+                     },
+                     "THEN": {
+                      "block": {
+                       "type": "math_number",
+                       "fields": {
+                        "NUM": 5
+                       }
+                      }
+                     },
+                     "ELSE": {
+                      "block": {
+                       "type": "math_number",
+                       "fields": {
+                        "NUM": 1
+                       }
+                      }
+                     }
+                    }
+                   }
+                  }
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_init",
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "variables_set",
+        "fields": {
+         "VAR": {
+          "id": "v_last"
+         }
+        },
+        "inputs": {
+         "VALUE": {
+          "block": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 60
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_redraw",
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_screen_text",
+        "fields": {
+         "ALIGN": "text"
+        },
+        "inputs": {
+         "TEXT": {
+          "shadow": {
+           "type": "text",
+           "fields": {
+            "TEXT": "grid keys"
+           }
+          }
+         },
+         "X": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 2
+           }
+          }
+         },
+         "Y": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 8
+           }
+          }
+         },
+         "LEVEL": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 15
+           }
+          }
+         }
+        },
+        "next": {
+         "block": {
+          "type": "nv_screen_font_size",
+          "inputs": {
+           "SIZE": {
+            "shadow": {
+             "type": "math_number",
+             "fields": {
+              "NUM": 24
+             }
+            }
+           }
+          },
+          "next": {
+           "block": {
+            "type": "nv_screen_text",
+            "fields": {
+             "ALIGN": "text_center"
+            },
+            "inputs": {
+             "TEXT": {
+              "block": {
+               "type": "nv_note_name",
+               "inputs": {
+                "NOTE": {
+                 "block": {
+                  "type": "variables_get",
+                  "fields": {
+                   "VAR": {
+                    "id": "v_last"
+                   }
+                  }
+                 }
+                }
+               }
+              }
+             },
+             "X": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 64
+               }
+              }
+             },
+             "Y": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 44
+               }
+              }
+             },
+             "LEVEL": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 15
+               }
+              }
+             }
+            },
+            "next": {
+             "block": {
+              "type": "nv_screen_font_size",
+              "inputs": {
+               "SIZE": {
+                "shadow": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 8
+                 }
+                }
+               }
+              },
+              "next": {
+               "block": {
+                "type": "nv_screen_text",
+                "fields": {
+                 "ALIGN": "text_center"
+                },
+                "inputs": {
+                 "TEXT": {
+                  "shadow": {
+                   "type": "text",
+                   "fields": {
+                    "TEXT": "play the grid"
+                   }
+                  }
+                 },
+                 "X": {
+                  "shadow": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 64
+                   }
+                  }
+                 },
+                 "Y": {
+                  "shadow": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 62
+                   }
+                  }
+                 },
+                 "LEVEL": {
+                  "shadow": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 3
+                   }
+                  }
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   ]
+  }
+ },
+ "patch": {
+  "enabled": true,
+  "modules": [
+   {
+    "id": "voice",
+    "type": "voice",
+    "x": 20,
+    "y": 30,
+    "params": {}
+   },
+   {
+    "id": "string1",
+    "type": "string",
+    "x": 250,
+    "y": 30,
+    "params": {
+     "decay": 4,
+     "damp": 0.25
+    }
+   },
+   {
+    "id": "filter1",
+    "type": "filter",
+    "x": 480,
+    "y": 30,
+    "params": {
+     "cutoff": 4000,
+     "res": 0.1,
+     "mod": 0
+    }
+   },
+   {
+    "id": "out",
+    "type": "out",
+    "x": 940,
+    "y": 30,
+    "params": {
+     "level": 0.6
+    }
+   }
+  ],
+  "cables": [
+   {
+    "from": "string1.out",
+    "to": "filter1.in"
+   },
+   {
+    "from": "filter1.out",
+    "to": "out.in"
+   }
+  ],
+  "fx": [
+   {
+    "id": "reverb1",
+    "type": "fx_reverb",
+    "params": {
+     "mix": 0.25
+    }
+   }
+  ],
+  "main": {
+   "input": 0,
+   "level": 1
+  }
+ }
+}

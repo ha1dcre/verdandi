@@ -1,13 +1,45 @@
-// app.js: the script builder page. saves through maiden's file api (/api/v1/dust/...), runs
-// through matron's websocket (port 5555, the one maiden's REPL uses), previews in the page.
-(function () {
+// app.js: the script builder page. the blocks (what the script does) and the sound page (the
+// patch the Weave engine plays) make one document; it saves through maiden's file api
+// (/api/v1/dust/...), runs through matron's websocket (port 5555, the one maiden's REPL uses)
+// and previews in the page. while a script made here runs, the sound page plays live.
+(async function () {
   'use strict';
   const API = '/api/v1/dust/';
   const FORMAT = 'verdandi-blocks';
   const DRAFT = 'verdandi-blocks-draft';
   const $ = id => document.getElementById(id);
+  const clone = o => JSON.parse(JSON.stringify(o));
 
-  const gen = VerdandiBlocks.register(Blockly, window.lua);
+  const catalog = await (await fetch('weave.json')).json();
+  const presets = await (await fetch('weave_presets.json')).json();
+  const W = window.VerdandiWeave;
+
+  // ---- the sound page
+  let patch = clone(W.DEFAULT_PATCH);
+  const isOption = key => W.params(patch, catalog).some(p => p.key === key && p.options);
+  const patcher = new VerdandiPatcher($('patcher'), catalog, {
+    presets,
+    onChange: (p, structural) => {
+      patch = p;
+      changed();
+      if (structural && liveName()) rerunSoon();
+    },
+    onParam: (key, value) => {
+      if (!liveName()) return;
+      send('params:set("' + key.replace('.', '_') + '", ' + (isOption(key) ? value + 1 : value) + ')', true);
+    },
+    onNote: (on, note, vel) => {
+      if (!liveName()) {
+        if (on) status('run the script to hear the sound: the keys then play it in Verdandi');
+        return;
+      }
+      const hz = 440 * Math.pow(2, (note - 69) / 12);
+      send(on ? 'engine.note_on(' + (5000 + note) + ', ' + hz.toFixed(3) + ', ' + vel + ')' : 'engine.note_off(' + (5000 + note) + ')', true);
+    },
+  });
+  patcher.setPatch(patch);
+
+  const gen = VerdandiBlocks.register(Blockly, window.lua, {getPatch: () => patch, weave: W, catalog});
 
   // ---- workspace
   const dark = window.matchMedia('(prefers-color-scheme: dark)');
@@ -32,6 +64,18 @@
   });
   dark.addEventListener('change', () => ws.setTheme(dark.matches ? themes.dark : themes.light));
   ws.addChangeListener(Blockly.Events.disableOrphans);
+
+  // ---- views: blocks or sound
+  let view = 'blocks';
+  function showView(which) {
+    view = which;
+    for (const t of document.querySelectorAll('[data-view]')) t.setAttribute('aria-selected', String(t.dataset.view === which));
+    $('blockly').hidden = which !== 'blocks';
+    $('patcher').hidden = which !== 'sound';
+    if (which === 'blocks') Blockly.svgResize(ws);
+    guide.update();
+  }
+  for (const t of document.querySelectorAll('[data-view]')) t.addEventListener('click', () => showView(t.dataset.view));
 
   // ---- name
   const nameInput = $('name');
@@ -66,11 +110,12 @@
     $('lua').textContent = code;
   }
   function documentJson() {
-    return {format: FORMAT, version: 1, name: scriptName(), workspace: Blockly.serialization.workspaces.save(ws)};
+    return {format: FORMAT, version: 2, name: scriptName(), workspace: Blockly.serialization.workspaces.save(ws),
+      patch: patcher.getPatch()};
   }
 
-  // ---- changes: Lua view, draft, preview
-  // unsaved: the blocks and name differ from what was last saved or opened
+  // ---- changes: Lua view, draft, preview, guide
+  // unsaved: the blocks, sound and name differ from what was last saved or opened
   let clean = '';
   const snapshot = () => JSON.stringify(documentJson());
   const isDirty = () => snapshot() !== clean;
@@ -82,6 +127,7 @@
       regenerate();
       try { localStorage.setItem(DRAFT, JSON.stringify(documentJson())); } catch (e) { /* no storage: fine */ }
       if (preview.running() || previewWanted) startPreview();
+      guide.update();
     }, 350);
   }
   ws.addChangeListener(e => { if (!e.isUiEvent) changed(); });
@@ -110,6 +156,10 @@
   }
 
   function loadDocument(doc, opts) {
+    // the sound first: the "sound ..." blocks offer its knobs
+    patch = clone((doc && doc.patch) || W.DEFAULT_PATCH);
+    patcher.setPatch(patch);
+    patch = patcher.getPatch();
     ws.clear();
     if (doc && doc.workspace) Blockly.serialization.workspaces.load(doc.workspace, ws);
     if (opts && opts.arrange) arrange();
@@ -118,6 +168,7 @@
     clean = (opts && opts.dirty) ? '' : snapshot();
     if (!(opts && opts.arrange)) ws.scrollCenter();
     if (previewWanted) startPreview();
+    guide.update();
   }
 
   // ---- maiden's file api
@@ -162,6 +213,7 @@
       await put(dir + '/' + blocksFile, JSON.stringify(documentJson(), null, 1) + '\n');
       markClean();
       status('saved ' + dir + '/' + name + '.lua', 'ok');
+      guide.saved();
       return true;
     } catch (e) {
       status(e.message, 'error');
@@ -170,8 +222,13 @@
   }
 
   // ---- open: scripts made here, and the examples
-  const EXAMPLES = [['first_steps', 'demo.json', 'a melody, a control on E2, K2 to start and stop'],
-    ['pulse', 'pulse.json', 'a ring breathing with the beat, a dial, a slider']];
+  const EXAMPLES = [
+    ['first_steps', 'demo.json', 'a melody, a control on E2, K2 to start and stop'],
+    ['pulse', 'pulse.json', 'a ring breathing with the beat, a dial, a slider'],
+    ['looper', 'looper.json', 'record a loop with K2 and K3, overdub, change its speed'],
+    ['drums', 'drums.json', 'euclidean rhythms and a pattern on the kick patch, tempo on E2'],
+    ['grid_keys', 'grid_keys.json', 'a grid keyboard for the sound, lit where it is held'],
+  ];
   async function openDialog() {
     const list = $('open-list');
     list.textContent = '';
@@ -185,7 +242,10 @@
       k.className = 'kind';
       k.textContent = kind;
       b.append(l, k);
-      b.addEventListener('click', async () => { $('open-dialog').close(); await action(); });
+      b.addEventListener('click', async () => {
+        $('open-dialog').close();
+        try { await action(); } catch (e) { status(e.message, 'error'); }
+      });
       li.appendChild(b);
       list.appendChild(li);
     };
@@ -218,9 +278,11 @@
     }
   }
 
-  // ---- matron (the norns lua): run, stop, its output
+  // ---- matron (the norns lua): run, stop, its output, the live sound page
   let matron = null;
   let retry = 500;
+  let running = null;  // the name of the script this page started, while it runs
+  const liveName = () => (running && matron && running === scriptName()) ? running : null;
   function connect() {
     let sock;
     try {
@@ -231,18 +293,23 @@
     sock.onopen = () => { matron = sock; retry = 500; $('link').className = 'link on'; };
     sock.onclose = () => {
       matron = null;
+      running = null;
+      patcher.setLive(false);
       $('link').className = 'link off';
       setTimeout(connect, retry);
       retry = Math.min(retry * 2, 5000);
     };
     sock.onmessage = async e => {
       const text = typeof e.data === 'string' ? e.data : await e.data.text();
-      for (const l of text.replace(/\n$/, '').split('\n')) consoleLine(l, /error|traceback/i.test(l) ? 'error' : '');
+      for (const l of text.replace(/\n$/, '').split('\n')) {
+        if (/^<ok>$/.test(l.trim())) continue;
+        consoleLine(l, /error|traceback/i.test(l) ? 'error' : '');
+      }
     };
   }
-  function send(cmd) {
+  function send(cmd, quiet) {
     if (!matron) {
-      status('norns is not reachable: is Verdandi running?', 'error');
+      if (!quiet) status('norns is not reachable: is Verdandi running?', 'error');
       return false;
     }
     matron.send(cmd + '\n');
@@ -252,13 +319,25 @@
     if (!(await save())) return;
     const name = scriptName();
     if (send('norns.script.load("code/' + name + '/' + name + '.lua")')) {
+      running = name;
+      patcher.setLive(true);
       showTab('console');
       consoleLine('-- run code/' + name + '/' + name + '.lua', 'info');
-      status('playing ' + name + ' in Verdandi', 'ok');
+      status('playing ' + name + ' in Verdandi: the sound page plays live now', 'ok');
+      guide.ran();
     }
   }
+  let rerunTimer = null;
+  function rerunSoon() {
+    clearTimeout(rerunTimer);
+    rerunTimer = setTimeout(() => { if (liveName()) run(); }, 700);
+  }
   function stopScript() {
-    if (send('norns.script.clear()')) status('stopped');
+    if (send('norns.script.clear()')) {
+      running = null;
+      patcher.setLive(false);
+      status('stopped');
+    }
   }
 
   // ---- the preview
@@ -274,6 +353,22 @@
     clearTimeout(noteTimer);
     noteTimer = setTimeout(() => { notes.textContent = ''; }, 600);
   };
+  // the grid of the preview: 16 x 8 keys, lit as the script lights them
+  const gridCanvas = $('grid');
+  const gridLeds = new Array(128).fill(0);
+  let gridShown = new Array(128).fill(0);
+  function drawGrid() {
+    const g = gridCanvas.getContext('2d');
+    g.fillStyle = '#0b0b0b';
+    g.fillRect(0, 0, gridCanvas.width, gridCanvas.height);
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 16; x++) {
+        const l = gridShown[y * 16 + x];
+        g.fillStyle = l ? 'rgb(' + (60 + l * 13) + ',' + (45 + l * 11) + ',' + (20 + l * 5) + ')' : '#222';
+        g.fillRect(1 + x * 20, 1 + y * 20, 18, 18);
+      }
+    }
+  }
   const preview = new VerdandiPreview($('screen'), {
     print: text => consoleLine('[preview] ' + text),
     error: text => {
@@ -282,11 +377,18 @@
       consoleLine('[preview] ' + text, 'error');
       status('preview: ' + text, 'error');
     },
-    engine: (cmd, v) => { if (cmd === 'hz') flash('♪ ' + noteName(v) + '  (' + Math.round(v) + ' Hz)'); },
+    engine: (cmd, hz) => { if (cmd === 'note_on' && hz) flash('♪ ' + noteName(hz) + '  (' + Math.round(hz) + ' Hz)'); },
     midi: (type, note) => { if (type === 'note_on') flash('MIDI ' + note); },
     param: () => {},
+    grid_used: () => { gridCanvas.hidden = false; drawGrid(); },
+    grid_led: (x, y, l) => { if (x >= 1 && x <= 16 && y >= 1 && y <= 8) gridLeds[(y - 1) * 16 + (x - 1)] = l; },
+    grid_all: l => gridLeds.fill(l),
+    grid_refresh: () => { gridShown = gridLeds.slice(); drawGrid(); },
   }, 'lib/');
   async function startPreview() {
+    gridCanvas.hidden = true;
+    gridLeds.fill(0);
+    gridShown.fill(0);
     const ok = await preview.start(code);
     if (ok) {
       $('preview-state').textContent = 'running (no sound: run plays it in Verdandi)';
@@ -319,6 +421,19 @@
       if (steps) { acc -= steps * 20; preview.enc(n, -steps); }
     }, {passive: false});
   }
+  let gridHeld = null;
+  const gridKeyAt = ev => {
+    const r = gridCanvas.getBoundingClientRect();
+    const x = Math.floor((ev.clientX - r.left) / r.width * 16) + 1, y = Math.floor((ev.clientY - r.top) / r.height * 8) + 1;
+    return (x >= 1 && x <= 16 && y >= 1 && y <= 8) ? [x, y] : null;
+  };
+  gridCanvas.addEventListener('pointerdown', ev => {
+    gridHeld = gridKeyAt(ev);
+    if (gridHeld) preview.grid(gridHeld[0], gridHeld[1], 1);
+  });
+  const gridUp = () => { if (gridHeld) preview.grid(gridHeld[0], gridHeld[1], 0); gridHeld = null; };
+  gridCanvas.addEventListener('pointerup', gridUp);
+  gridCanvas.addEventListener('pointerleave', gridUp);
 
   // ---- tabs, buttons
   function showTab(which) {
@@ -330,10 +445,13 @@
   $('copy').addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(code); status('Lua copied'); } catch (e) { status('could not copy', 'error'); }
   });
-  $('new').addEventListener('click', () => {
-    if (isDirty() && !confirm('leave the unsaved blocks?')) return;
+  function newDocument() {
     loadDocument(null, {name: ''});
     status('empty workspace: drag an event from "Events" to begin');
+  }
+  $('new').addEventListener('click', () => {
+    if (isDirty() && !confirm('leave the unsaved blocks?')) return;
+    newDocument();
   });
   $('open').addEventListener('click', () => {
     if (isDirty() && !confirm('leave the unsaved blocks?')) return;
@@ -347,31 +465,47 @@
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); run(); }
   });
 
+  // ---- the guide
+  const guide = new VerdandiGuide($('guide'), {
+    workspace: ws,
+    getPatch: () => patch,
+    getView: () => view,
+    showView,
+    newDocument: () => {
+      if (isDirty() && !confirm('the guide starts with an empty workspace: leave the unsaved blocks?')) return false;
+      newDocument();
+      return true;
+    },
+    status,
+  });
+  $('guide-open').addEventListener('click', () => guide.toggle());
+
   // ---- start: an example the address names (?example=pulse), the draft of last time, or the
-  // first example
-  (async () => {
-    const wanted = EXAMPLES.find(x => x[0] === new URLSearchParams(location.search).get('example'));
-    if (wanted) {
-      loadDocument(await (await fetch(wanted[1])).json(), {name: '', dirty: true, arrange: true});
-      status('example ' + wanted[0] + ': give it a name of your own to save it');
-      connect();
-      return;
+  // first example (with the guide open, the first time)
+  const query = new URLSearchParams(location.search);
+  const wanted = EXAMPLES.find(x => x[0] === query.get('example'));
+  let draft = null;
+  try { draft = JSON.parse(localStorage.getItem(DRAFT) || 'null'); } catch (e) { draft = null; }
+  let started = false;
+  if (wanted) {
+    loadDocument(await (await fetch(wanted[1])).json(), {name: '', dirty: true, arrange: true});
+    status('example ' + wanted[0] + ': give it a name of your own to save it');
+    started = true;
+  } else if (draft && draft.format === FORMAT) {
+    try {
+      loadDocument(draft, {dirty: true});
+      status('your blocks from last time');
+      started = true;
+    } catch (e) {
+      started = false;
     }
-    let draft = null;
-    try { draft = JSON.parse(localStorage.getItem(DRAFT) || 'null'); } catch (e) { draft = null; }
-    if (draft && draft.format === FORMAT) {
-      try {
-        loadDocument(draft, {dirty: true});
-        status('your blocks from last time');
-      } catch (e) {
-        draft = null;
-      }
-    }
-    if (!draft) {
-      const doc = await (await fetch('demo.json')).json();
-      loadDocument(doc, {name: '', dirty: false, arrange: true});
-      status('the example first_steps: change it, name it, run it');
-    }
-    connect();
-  })();
+  }
+  if (!started) {
+    loadDocument(await (await fetch('demo.json')).json(), {name: '', dirty: false, arrange: true});
+    status('the example first_steps: change it, name it, run it, or open the guide');
+    if (!guide.seen()) guide.open();
+  }
+  if (query.get('view') === 'sound') showView('sound');
+  if (query.has('guide')) guide.open(Number(query.get('guide')) || 0, Number(query.get('step')) || 0);
+  connect();
 })();

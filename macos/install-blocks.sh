@@ -18,12 +18,15 @@ B="$APP/blocks"
 
 rm -rf "$B"
 mkdir -p "$B/vendor/blockly/msg" "$B/vendor/fengari" "$B/lib"
-cp "$REPO"/macos/blocks/{index.html,style.css,app.js,blocks.js,preview.js,preview_norns.lua,demo.json,pulse.json} "$B/"
+# the page: everything in macos/blocks but the patcher's dev page
+for f in "$REPO"/macos/blocks/*; do
+    case "$(basename "$f")" in patcher-dev.html) ;; *) cp "$f" "$B/" ;; esac
+done
 cp "$BLOCKLY"/{blockly_compressed.js,blocks_compressed.js,lua_compressed.js,LICENSE} "$B/vendor/blockly/"
 cp "$BLOCKLY/msg/en.js" "$B/vendor/blockly/msg/"
 cp -R "$BLOCKLY/media" "$B/vendor/blockly/"
 cp "$FENGARI/dist/fengari-web.js" "$FENGARI/LICENSE" "$B/vendor/fengari/"
-for l in util tabutil musicutil sequins ui; do cp "$REPO/lua/lib/$l.lua" "$B/lib/"; done
+for l in util tabutil musicutil sequins ui er; do cp "$REPO/lua/lib/$l.lua" "$B/lib/"; done
 cp "$REPO/resources/norns.ttf" "$B/lib/"
 
 # a link from maiden's page to the builder, once (maiden's own app is not rebuilt for it)
