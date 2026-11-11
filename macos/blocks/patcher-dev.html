@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>patcher dev</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./patcher.css">
+<style>
+  body { display: block; overflow: auto; height: auto; }
+  html[data-theme="light"] { --bg:#f4f4f2; --panel:#fff; --line:#d9d9d4; --text:#222; --muted:#6d6d68; --accent:#b5651d; --accent-text:#fff; --ok:#3f8f4f; --bad:#b23b3b; color-scheme: light; }
+  html[data-theme="dark"] { --bg:#151515; --panel:#1d1d1d; --line:#333; --text:#ddd; --muted:#8c8c86; --accent:#e0913f; --accent-text:#151515; --ok:#6cbf7b; --bad:#e06c6c; color-scheme: dark; }
+  #host { height: 640px; border-bottom: 1px solid var(--line); }
+  pre { margin: 0; padding: 6px 10px; font: 11px/1.3 ui-monospace, Menlo, monospace; white-space: pre-wrap; max-height: 150px; overflow: auto; }
+</style>
+</head>
+<body>
+<div id="host"></div>
+<pre id="check">check pending</pre>
+<pre id="log"></pre>
+<script src="./patcher.js"></script>
+<script>
+(function () {
+  var q = location.search;
+  if (/light/.test(q)) document.documentElement.setAttribute('data-theme', 'light');
+  if (/dark/.test(q)) document.documentElement.setAttribute('data-theme', 'dark');
+  var logEl = document.getElementById('log'), checkEl = document.getElementById('check');
+  function log(s) { logEl.textContent += s + '\n'; }
+
+  var SAMPLE = {
+    enabled: true,
+    modules: [
+      { id: 'voice', type: 'voice', x: 20, y: 30, params: { voices: 8 } },
+      { id: 'osc1', type: 'osc', x: 250, y: 30, params: { wave: 2 } },
+      { id: 'lfo1', type: 'lfo', x: 250, y: 330, params: { rate: 0.4 } },
+      { id: 'filter1', type: 'filter', x: 500, y: 30, params: { cutoff: 900 } },
+      { id: 'env1', type: 'env', x: 500, y: 330, params: {} },
+      { id: 'vca1', type: 'vca', x: 750, y: 30, params: {} },
+      { id: 'env2', type: 'env', x: 750, y: 330, params: { a: 0.01, r: 0.6 } },
+      { id: 'out', type: 'out', x: 1000, y: 30, params: { level: 0.5 } },
+      { id: 'bogus1', type: 'nope', x: 0, y: 0, params: {} }
+    ],
+    cables: [
+      { from: 'voice.pitch', to: 'osc1.pitch' }, { from: 'voice.gate', to: 'env1.gate' }, { from: 'voice.gate', to: 'env2.gate' },
+      { from: 'lfo1.out', to: 'osc1.pwm' }, { from: 'osc1.out', to: 'filter1.in' }, { from: 'env1.out', to: 'filter1.mod' },
+      { from: 'filter1.out', to: 'vca1.in' }, { from: 'env2.out', to: 'vca1.cv' }, { from: 'vca1.out', to: 'out.in' },
+      { from: 'ghost.out', to: 'out.in' }
+    ],
+    fx: [{ id: 'delay1', type: 'fx_delay', params: { mix: 0.3 } }, { id: 'reverb1', type: 'fx_reverb', params: {} }],
+    main: { input: 0, level: 1 }
+  };
+
+  fetch('./weave.json').then(function (r) { return r.json(); }).then(function (catalog) {
+    var presets = [{ name: 'sample', about: 'the sample patch', patch: SAMPLE }];
+    var p = new VerdandiPatcher(document.getElementById('host'), catalog, {
+      presets: presets,
+      onChange: function (patch, s) { log('onChange structural=' + s + ' modules=' + patch.modules.length + ' cables=' + patch.cables.length + ' fx=' + patch.fx.map(function (f) { return f.id; })); },
+      onParam: function (k, v) { log('onParam ' + k + ' = ' + v); },
+      onNote: function (on, n, v) { log('onNote ' + on + ' ' + n + ' ' + v); }
+    });
+    window.patcher = p;
+    p.setPatch(SAMPLE);
+    p.setLive(true);
+    requestAnimationFrame(function () { p._drawCables(); });
+
+    var out = [];
+    function t(name, ok) { out.push((ok ? 'PASS ' : 'FAIL ') + name); }
+    var n0 = p.getPatch().modules.length;
+    t('unknown module/cable dropped', n0 === 8 && p.getPatch().cables.length === 9);
+    var id = p.addModule('mixer');
+    t('add module via button path (' + id + ')', id === 'mixer1' && p.getPatch().modules.length === n0 + 1);
+    var r = p.connect('env1.out', 'mixer1.in1');
+    t('connect env1.out -> mixer1.in1', r.ok && p.getPatch().cables.length === 10);
+    var r2 = p.connect('mixer1.out', 'osc1.fm');
+    t('connect mixer1.out -> osc1.fm', r2.ok);
+    var r3 = p.connect('osc1.out', 'mixer1.in2');   // osc1 -> mixer1 -> osc1.fm : cycle
+    t('cycle refused: ' + r3.reason, !r3.ok && r3.loop === true);
+    var r4 = p.connect('osc1.fm', 'mixer1.out');     // reversed order works
+    t('duplicate refused (reversed order): ' + r4.reason, !r4.ok);
+    var cn = p.getPatch().cables.length;
+    p.removeCable(cn - 1);
+    t('remove cable', p.getPatch().cables.length === cn - 1);
+    t('fixed module not removable', p.removeModule('out') === false);
+    p.moveFx('reverb1', -1);
+    t('move fx up', p.getPatch().fx[0].id === 'reverb1');
+    var fid = p.addFx('fx_tape');
+    t('add fx (' + fid + ')', fid === 'tape1' && p.getPatch().fx.length === 3);
+    var rt = new VerdandiPatcher(document.createElement('div'), catalog, {});
+    rt.setPatch(p.getPatch());
+    t('getPatch/setPatch round trip', JSON.stringify(rt.getPatch()) === JSON.stringify(p.getPatch()));
+    var json = JSON.stringify(p.getPatch());
+    checkEl.textContent = out.join('\n') + '\n' + json;
+    p.setPatch(SAMPLE); p.setLive(true);  // back to the sample for the screenshot
+    p.addModule('sh');
+  }).catch(function (e) { checkEl.textContent = 'FAIL load: ' + e; });
+})();
+</script>
+</body>
+</html>

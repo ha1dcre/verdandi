@@ -1,0 +1,1292 @@
+[
+ {
+  "name": "pluck",
+  "about": "a plucked saw: the sound a new script starts with",
+  "patch": {
+   "enabled": true,
+   "modules": [
+    {
+     "id": "voice",
+     "type": "voice",
+     "x": 20,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "osc1",
+     "type": "osc",
+     "x": 250,
+     "y": 30,
+     "params": {
+      "wave": 2
+     }
+    },
+    {
+     "id": "env1",
+     "type": "env",
+     "x": 250,
+     "y": 330,
+     "params": {
+      "a": 0.002,
+      "d": 0.4,
+      "s": 0.2,
+      "r": 0.4
+     }
+    },
+    {
+     "id": "filter1",
+     "type": "filter",
+     "x": 480,
+     "y": 30,
+     "params": {
+      "cutoff": 900,
+      "mod": 3,
+      "track": 0.3
+     }
+    },
+    {
+     "id": "vca1",
+     "type": "vca",
+     "x": 710,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "out",
+     "type": "out",
+     "x": 940,
+     "y": 30,
+     "params": {
+      "level": 0.5
+     }
+    }
+   ],
+   "cables": [
+    {
+     "from": "osc1.out",
+     "to": "filter1.in"
+    },
+    {
+     "from": "env1.out",
+     "to": "filter1.mod"
+    },
+    {
+     "from": "filter1.out",
+     "to": "vca1.in"
+    },
+    {
+     "from": "env1.out",
+     "to": "vca1.cv"
+    },
+    {
+     "from": "vca1.out",
+     "to": "out.in"
+    }
+   ],
+   "fx": [
+    {
+     "id": "reverb1",
+     "type": "fx_reverb",
+     "params": {
+      "mix": 0.2
+     }
+    }
+   ],
+   "main": {
+    "input": 0,
+    "level": 1
+   }
+  }
+ },
+ {
+  "name": "pad",
+  "about": "slow, wide and moving: supersaw, a breathing filter, chorus and a big room",
+  "patch": {
+   "enabled": true,
+   "modules": [
+    {
+     "id": "voice",
+     "type": "voice",
+     "x": 20,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "saw1",
+     "type": "supersaw",
+     "x": 250,
+     "y": 30,
+     "params": {
+      "detune": 0.35
+     }
+    },
+    {
+     "id": "env2",
+     "type": "env",
+     "x": 250,
+     "y": 330,
+     "params": {
+      "a": 1.5,
+      "d": 2,
+      "s": 0.6,
+      "r": 3,
+      "vel": 0.2
+     }
+    },
+    {
+     "id": "lfo1",
+     "type": "lfo",
+     "x": 480,
+     "y": 330,
+     "params": {
+      "rate": 0.15,
+      "level": 0.3
+     }
+    },
+    {
+     "id": "filter1",
+     "type": "filter",
+     "x": 480,
+     "y": 30,
+     "params": {
+      "cutoff": 1400,
+      "res": 0.25,
+      "mod": 1.5
+     }
+    },
+    {
+     "id": "env1",
+     "type": "env",
+     "x": 710,
+     "y": 330,
+     "params": {
+      "a": 0.8,
+      "d": 1,
+      "s": 0.85,
+      "r": 2.5,
+      "vel": 0.3
+     }
+    },
+    {
+     "id": "vca1",
+     "type": "vca",
+     "x": 710,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "out",
+     "type": "out",
+     "x": 940,
+     "y": 30,
+     "params": {
+      "level": 0.35,
+      "spread": 0.6
+     }
+    }
+   ],
+   "cables": [
+    {
+     "from": "saw1.out",
+     "to": "filter1.in"
+    },
+    {
+     "from": "env2.out",
+     "to": "filter1.mod"
+    },
+    {
+     "from": "lfo1.out",
+     "to": "filter1.mod"
+    },
+    {
+     "from": "filter1.out",
+     "to": "vca1.in"
+    },
+    {
+     "from": "env1.out",
+     "to": "vca1.cv"
+    },
+    {
+     "from": "vca1.out",
+     "to": "out.in"
+    }
+   ],
+   "fx": [
+    {
+     "id": "chorus1",
+     "type": "fx_chorus",
+     "params": {
+      "mix": 0.4
+     }
+    },
+    {
+     "id": "reverb1",
+     "type": "fx_reverb",
+     "params": {
+      "size": 0.85,
+      "mix": 0.4
+     }
+    }
+   ],
+   "main": {
+    "input": 0,
+    "level": 1
+   }
+  }
+ },
+ {
+  "name": "bass",
+  "about": "one voice at a time with glide: square and saw under a squelchy filter",
+  "patch": {
+   "enabled": true,
+   "modules": [
+    {
+     "id": "voice",
+     "type": "voice",
+     "x": 20,
+     "y": 30,
+     "params": {
+      "mode": 1,
+      "glide": 0.06
+     }
+    },
+    {
+     "id": "osc1",
+     "type": "osc",
+     "x": 250,
+     "y": 30,
+     "params": {
+      "wave": 3,
+      "tune": -12,
+      "level": 0.7
+     }
+    },
+    {
+     "id": "osc2",
+     "type": "osc",
+     "x": 250,
+     "y": 330,
+     "params": {
+      "wave": 2,
+      "fine": 6,
+      "level": 0.6
+     }
+    },
+    {
+     "id": "mixer1",
+     "type": "mixer",
+     "x": 480,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "env1",
+     "type": "env",
+     "x": 480,
+     "y": 330,
+     "params": {
+      "a": 0.001,
+      "d": 0.22,
+      "s": 0.15,
+      "r": 0.12
+     }
+    },
+    {
+     "id": "filter1",
+     "type": "filter",
+     "x": 710,
+     "y": 30,
+     "params": {
+      "cutoff": 180,
+      "res": 0.55,
+      "mod": 4
+     }
+    },
+    {
+     "id": "env2",
+     "type": "env",
+     "x": 710,
+     "y": 330,
+     "params": {
+      "a": 0.002,
+      "d": 0.3,
+      "s": 0.8,
+      "r": 0.1
+     }
+    },
+    {
+     "id": "vca1",
+     "type": "vca",
+     "x": 940,
+     "y": 330,
+     "params": {}
+    },
+    {
+     "id": "out",
+     "type": "out",
+     "x": 940,
+     "y": 30,
+     "params": {
+      "level": 0.55
+     }
+    }
+   ],
+   "cables": [
+    {
+     "from": "osc1.out",
+     "to": "mixer1.in1"
+    },
+    {
+     "from": "osc2.out",
+     "to": "mixer1.in2"
+    },
+    {
+     "from": "mixer1.out",
+     "to": "filter1.in"
+    },
+    {
+     "from": "env1.out",
+     "to": "filter1.mod"
+    },
+    {
+     "from": "filter1.out",
+     "to": "vca1.in"
+    },
+    {
+     "from": "env2.out",
+     "to": "vca1.cv"
+    },
+    {
+     "from": "vca1.out",
+     "to": "out.in"
+    }
+   ],
+   "fx": [
+    {
+     "id": "drive1",
+     "type": "fx_drive",
+     "params": {
+      "amount": 2,
+      "mix": 0.5
+     }
+    },
+    {
+     "id": "comp1",
+     "type": "fx_comp",
+     "params": {}
+    }
+   ],
+   "main": {
+    "input": 0,
+    "level": 1
+   }
+  }
+ },
+ {
+  "name": "bell",
+  "about": "fm: a modulator at 3.5 times the pitch, fading, rings the carrier like a bell",
+  "patch": {
+   "enabled": true,
+   "modules": [
+    {
+     "id": "voice",
+     "type": "voice",
+     "x": 20,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "mod1",
+     "type": "fmop",
+     "x": 250,
+     "y": 30,
+     "params": {
+      "ratio": 3.5,
+      "index": 0
+     }
+    },
+    {
+     "id": "env1",
+     "type": "env",
+     "x": 250,
+     "y": 330,
+     "params": {
+      "a": 0.001,
+      "d": 1.2,
+      "s": 0,
+      "r": 1.2
+     }
+    },
+    {
+     "id": "vca1",
+     "type": "vca",
+     "x": 480,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "car1",
+     "type": "fmop",
+     "x": 710,
+     "y": 30,
+     "params": {
+      "ratio": 1,
+      "index": 4
+     }
+    },
+    {
+     "id": "env2",
+     "type": "env",
+     "x": 480,
+     "y": 330,
+     "params": {
+      "a": 0.002,
+      "d": 3,
+      "s": 0,
+      "r": 3
+     }
+    },
+    {
+     "id": "vca2",
+     "type": "vca",
+     "x": 710,
+     "y": 330,
+     "params": {}
+    },
+    {
+     "id": "out",
+     "type": "out",
+     "x": 940,
+     "y": 30,
+     "params": {
+      "level": 0.4
+     }
+    }
+   ],
+   "cables": [
+    {
+     "from": "mod1.out",
+     "to": "vca1.in"
+    },
+    {
+     "from": "env1.out",
+     "to": "vca1.cv"
+    },
+    {
+     "from": "vca1.out",
+     "to": "car1.pm"
+    },
+    {
+     "from": "car1.out",
+     "to": "vca2.in"
+    },
+    {
+     "from": "env2.out",
+     "to": "vca2.cv"
+    },
+    {
+     "from": "vca2.out",
+     "to": "out.in"
+    }
+   ],
+   "fx": [
+    {
+     "id": "delay1",
+     "type": "fx_delay",
+     "params": {
+      "time": 0.3,
+      "mix": 0.2
+     }
+    },
+    {
+     "id": "reverb1",
+     "type": "fx_reverb",
+     "params": {
+      "mix": 0.3
+     }
+    }
+   ],
+   "main": {
+    "input": 0,
+    "level": 1
+   }
+  }
+ },
+ {
+  "name": "string",
+  "about": "a plucked string that rings on after the key is up",
+  "patch": {
+   "enabled": true,
+   "modules": [
+    {
+     "id": "voice",
+     "type": "voice",
+     "x": 20,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "string1",
+     "type": "string",
+     "x": 250,
+     "y": 30,
+     "params": {
+      "decay": 4,
+      "damp": 0.25
+     }
+    },
+    {
+     "id": "filter1",
+     "type": "filter",
+     "x": 480,
+     "y": 30,
+     "params": {
+      "cutoff": 4000,
+      "res": 0.1,
+      "mod": 0
+     }
+    },
+    {
+     "id": "out",
+     "type": "out",
+     "x": 940,
+     "y": 30,
+     "params": {
+      "level": 0.6
+     }
+    }
+   ],
+   "cables": [
+    {
+     "from": "string1.out",
+     "to": "filter1.in"
+    },
+    {
+     "from": "filter1.out",
+     "to": "out.in"
+    }
+   ],
+   "fx": [
+    {
+     "id": "reverb1",
+     "type": "fx_reverb",
+     "params": {
+      "mix": 0.25
+     }
+    }
+   ],
+   "main": {
+    "input": 0,
+    "level": 1
+   }
+  }
+ },
+ {
+  "name": "drone",
+  "about": "noise rung by a resonator, a sub, a drifting filter, tape and a long hall",
+  "patch": {
+   "enabled": true,
+   "modules": [
+    {
+     "id": "voice",
+     "type": "voice",
+     "x": 20,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "noise1",
+     "type": "noise",
+     "x": 250,
+     "y": 30,
+     "params": {
+      "color": 1
+     }
+    },
+    {
+     "id": "comb1",
+     "type": "comb",
+     "x": 480,
+     "y": 30,
+     "params": {
+      "decay": 3,
+      "level": 0.4
+     }
+    },
+    {
+     "id": "osc1",
+     "type": "osc",
+     "x": 250,
+     "y": 330,
+     "params": {
+      "wave": 0,
+      "tune": -12,
+      "level": 0.4
+     }
+    },
+    {
+     "id": "mixer1",
+     "type": "mixer",
+     "x": 710,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "drift1",
+     "type": "drift",
+     "x": 480,
+     "y": 330,
+     "params": {
+      "rate": 0.1
+     }
+    },
+    {
+     "id": "filter1",
+     "type": "filter",
+     "x": 710,
+     "y": 330,
+     "params": {
+      "cutoff": 800,
+      "mod": 1.5
+     }
+    },
+    {
+     "id": "env1",
+     "type": "env",
+     "x": 940,
+     "y": 330,
+     "params": {
+      "a": 3,
+      "d": 1,
+      "s": 1,
+      "r": 5,
+      "vel": 0
+     }
+    },
+    {
+     "id": "vca1",
+     "type": "vca",
+     "x": 940,
+     "y": 630,
+     "params": {}
+    },
+    {
+     "id": "out",
+     "type": "out",
+     "x": 940,
+     "y": 30,
+     "params": {
+      "level": 0.45,
+      "spread": 0.5
+     }
+    }
+   ],
+   "cables": [
+    {
+     "from": "noise1.out",
+     "to": "comb1.in"
+    },
+    {
+     "from": "comb1.out",
+     "to": "mixer1.in1"
+    },
+    {
+     "from": "osc1.out",
+     "to": "mixer1.in2"
+    },
+    {
+     "from": "mixer1.out",
+     "to": "filter1.in"
+    },
+    {
+     "from": "drift1.out",
+     "to": "filter1.mod"
+    },
+    {
+     "from": "filter1.out",
+     "to": "vca1.in"
+    },
+    {
+     "from": "env1.out",
+     "to": "vca1.cv"
+    },
+    {
+     "from": "vca1.out",
+     "to": "out.in"
+    }
+   ],
+   "fx": [
+    {
+     "id": "tape1",
+     "type": "fx_tape",
+     "params": {}
+    },
+    {
+     "id": "delay1",
+     "type": "fx_delay",
+     "params": {
+      "time": 0.7,
+      "feedback": 0.6,
+      "mix": 0.3
+     }
+    },
+    {
+     "id": "reverb1",
+     "type": "fx_reverb",
+     "params": {
+      "size": 0.95,
+      "mix": 0.5
+     }
+    }
+   ],
+   "main": {
+    "input": 0,
+    "level": 1
+   }
+  }
+ },
+ {
+  "name": "kick",
+  "about": "a sine whose pitch falls fast: play low notes (36) for a kick, higher for toms",
+  "patch": {
+   "enabled": true,
+   "modules": [
+    {
+     "id": "voice",
+     "type": "voice",
+     "x": 20,
+     "y": 30,
+     "params": {
+      "voices": 4
+     }
+    },
+    {
+     "id": "env1",
+     "type": "env",
+     "x": 250,
+     "y": 330,
+     "params": {
+      "a": 0.001,
+      "d": 0.12,
+      "s": 0,
+      "r": 0.05,
+      "vel": 0
+     }
+    },
+    {
+     "id": "osc1",
+     "type": "osc",
+     "x": 250,
+     "y": 30,
+     "params": {
+      "wave": 0,
+      "fm": 36
+     }
+    },
+    {
+     "id": "env2",
+     "type": "env",
+     "x": 480,
+     "y": 330,
+     "params": {
+      "a": 0.001,
+      "d": 0.5,
+      "s": 0,
+      "r": 0.3,
+      "curve": -6
+     }
+    },
+    {
+     "id": "vca1",
+     "type": "vca",
+     "x": 480,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "drive1",
+     "type": "drive",
+     "x": 710,
+     "y": 30,
+     "params": {
+      "amount": 3,
+      "level": 0.8
+     }
+    },
+    {
+     "id": "out",
+     "type": "out",
+     "x": 940,
+     "y": 30,
+     "params": {
+      "level": 0.8
+     }
+    }
+   ],
+   "cables": [
+    {
+     "from": "env1.out",
+     "to": "osc1.fm"
+    },
+    {
+     "from": "osc1.out",
+     "to": "vca1.in"
+    },
+    {
+     "from": "env2.out",
+     "to": "vca1.cv"
+    },
+    {
+     "from": "vca1.out",
+     "to": "drive1.in"
+    },
+    {
+     "from": "drive1.out",
+     "to": "out.in"
+    }
+   ],
+   "fx": [
+    {
+     "id": "comp1",
+     "type": "fx_comp",
+     "params": {}
+    }
+   ],
+   "main": {
+    "input": 0,
+    "level": 1
+   }
+  }
+ },
+ {
+  "name": "choir",
+  "about": "a voice that moves between vowels, slowly, with chorus",
+  "patch": {
+   "enabled": true,
+   "modules": [
+    {
+     "id": "voice",
+     "type": "voice",
+     "x": 20,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "vowel1",
+     "type": "formant",
+     "x": 250,
+     "y": 30,
+     "params": {
+      "vowel": 1.5
+     }
+    },
+    {
+     "id": "lfo1",
+     "type": "lfo",
+     "x": 250,
+     "y": 330,
+     "params": {
+      "rate": 0.3,
+      "level": 1
+     }
+    },
+    {
+     "id": "env1",
+     "type": "env",
+     "x": 480,
+     "y": 330,
+     "params": {
+      "a": 0.4,
+      "d": 0.5,
+      "s": 0.8,
+      "r": 1.5
+     }
+    },
+    {
+     "id": "vca1",
+     "type": "vca",
+     "x": 480,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "out",
+     "type": "out",
+     "x": 940,
+     "y": 30,
+     "params": {
+      "level": 0.45,
+      "spread": 0.7
+     }
+    }
+   ],
+   "cables": [
+    {
+     "from": "lfo1.out",
+     "to": "vowel1.vowel"
+    },
+    {
+     "from": "vowel1.out",
+     "to": "vca1.in"
+    },
+    {
+     "from": "env1.out",
+     "to": "vca1.cv"
+    },
+    {
+     "from": "vca1.out",
+     "to": "out.in"
+    }
+   ],
+   "fx": [
+    {
+     "id": "chorus1",
+     "type": "fx_chorus",
+     "params": {
+      "mix": 0.5
+     }
+    },
+    {
+     "id": "reverb1",
+     "type": "fx_reverb",
+     "params": {
+      "size": 0.8,
+      "mix": 0.35
+     }
+    }
+   ],
+   "main": {
+    "input": 0,
+    "level": 1
+   }
+  }
+ },
+ {
+  "name": "sampler",
+  "about": "plays the sound file in slot 1 (the \"load sample\" block) at the pitch of each note; 60 is its own pitch",
+  "patch": {
+   "enabled": true,
+   "modules": [
+    {
+     "id": "voice",
+     "type": "voice",
+     "x": 20,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "sample1",
+     "type": "sample",
+     "x": 250,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "filter1",
+     "type": "filter",
+     "x": 480,
+     "y": 30,
+     "params": {
+      "cutoff": 8000,
+      "mod": 0
+     }
+    },
+    {
+     "id": "env1",
+     "type": "env",
+     "x": 480,
+     "y": 330,
+     "params": {
+      "a": 0.001,
+      "d": 0.1,
+      "s": 1,
+      "r": 0.3,
+      "vel": 0.7
+     }
+    },
+    {
+     "id": "vca1",
+     "type": "vca",
+     "x": 710,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "out",
+     "type": "out",
+     "x": 940,
+     "y": 30,
+     "params": {
+      "level": 0.7
+     }
+    }
+   ],
+   "cables": [
+    {
+     "from": "sample1.out",
+     "to": "filter1.in"
+    },
+    {
+     "from": "filter1.out",
+     "to": "vca1.in"
+    },
+    {
+     "from": "env1.out",
+     "to": "vca1.cv"
+    },
+    {
+     "from": "vca1.out",
+     "to": "out.in"
+    }
+   ],
+   "fx": [
+    {
+     "id": "reverb1",
+     "type": "fx_reverb",
+     "params": {
+      "mix": 0.15
+     }
+    }
+   ],
+   "main": {
+    "input": 0,
+    "level": 1
+   }
+  }
+ },
+ {
+  "name": "acid",
+  "about": "one voice, sliding: a saw through a screaming filter",
+  "patch": {
+   "enabled": true,
+   "modules": [
+    {
+     "id": "voice",
+     "type": "voice",
+     "x": 20,
+     "y": 30,
+     "params": {
+      "mode": 2,
+      "glide": 0.08
+     }
+    },
+    {
+     "id": "osc1",
+     "type": "osc",
+     "x": 250,
+     "y": 30,
+     "params": {
+      "wave": 2
+     }
+    },
+    {
+     "id": "env1",
+     "type": "env",
+     "x": 250,
+     "y": 330,
+     "params": {
+      "a": 0.001,
+      "d": 0.18,
+      "s": 0,
+      "r": 0.1
+     }
+    },
+    {
+     "id": "filter1",
+     "type": "filter",
+     "x": 480,
+     "y": 30,
+     "params": {
+      "cutoff": 300,
+      "res": 0.85,
+      "mod": 4.5
+     }
+    },
+    {
+     "id": "env2",
+     "type": "env",
+     "x": 480,
+     "y": 330,
+     "params": {
+      "a": 0.001,
+      "d": 0.25,
+      "s": 0.7,
+      "r": 0.08
+     }
+    },
+    {
+     "id": "vca1",
+     "type": "vca",
+     "x": 710,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "drive1",
+     "type": "drive",
+     "x": 710,
+     "y": 330,
+     "params": {
+      "type": 1,
+      "amount": 2.5,
+      "level": 0.6
+     }
+    },
+    {
+     "id": "out",
+     "type": "out",
+     "x": 940,
+     "y": 30,
+     "params": {
+      "level": 0.45
+     }
+    }
+   ],
+   "cables": [
+    {
+     "from": "osc1.out",
+     "to": "filter1.in"
+    },
+    {
+     "from": "env1.out",
+     "to": "filter1.mod"
+    },
+    {
+     "from": "filter1.out",
+     "to": "vca1.in"
+    },
+    {
+     "from": "env2.out",
+     "to": "vca1.cv"
+    },
+    {
+     "from": "vca1.out",
+     "to": "drive1.in"
+    },
+    {
+     "from": "drive1.out",
+     "to": "out.in"
+    }
+   ],
+   "fx": [
+    {
+     "id": "delay1",
+     "type": "fx_delay",
+     "params": {
+      "time": 0.375,
+      "feedback": 0.45,
+      "mix": 0.2
+     }
+    }
+   ],
+   "main": {
+    "input": 0,
+    "level": 1
+   }
+  }
+ },
+ {
+  "name": "bleeps",
+  "about": "random steps jump the pitch: every held note becomes a melody of its own",
+  "patch": {
+   "enabled": true,
+   "modules": [
+    {
+     "id": "voice",
+     "type": "voice",
+     "x": 20,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "sh1",
+     "type": "sh",
+     "x": 250,
+     "y": 330,
+     "params": {
+      "rate": 8
+     }
+    },
+    {
+     "id": "osc1",
+     "type": "osc",
+     "x": 250,
+     "y": 30,
+     "params": {
+      "wave": 3,
+      "fm": 12,
+      "pw": 0.3
+     }
+    },
+    {
+     "id": "env1",
+     "type": "env",
+     "x": 480,
+     "y": 330,
+     "params": {
+      "a": 0.002,
+      "d": 0.15,
+      "s": 0.5,
+      "r": 0.3
+     }
+    },
+    {
+     "id": "vca1",
+     "type": "vca",
+     "x": 480,
+     "y": 30,
+     "params": {}
+    },
+    {
+     "id": "out",
+     "type": "out",
+     "x": 940,
+     "y": 30,
+     "params": {
+      "level": 0.35
+     }
+    }
+   ],
+   "cables": [
+    {
+     "from": "sh1.out",
+     "to": "osc1.fm"
+    },
+    {
+     "from": "osc1.out",
+     "to": "vca1.in"
+    },
+    {
+     "from": "env1.out",
+     "to": "vca1.cv"
+    },
+    {
+     "from": "vca1.out",
+     "to": "out.in"
+    }
+   ],
+   "fx": [
+    {
+     "id": "delay1",
+     "type": "fx_delay",
+     "params": {
+      "time": 0.25,
+      "feedback": 0.5,
+      "mix": 0.3
+     }
+    },
+    {
+     "id": "reverb1",
+     "type": "fx_reverb",
+     "params": {
+      "mix": 0.3
+     }
+    }
+   ],
+   "main": {
+    "input": 0,
+    "level": 1
+   }
+  }
+ }
+]
