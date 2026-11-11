@@ -19,6 +19,16 @@ does not, send the logs: `~/norns/norns.log`, `sclang.log`, `jackd.log`, `auv3_b
 - [ ] quit Verdandi while on SYS, start it again: SYS again, with the note; the video goes into norns
 - [ ] Manual.pdf and the Licenses folder open from the dmg
 
+## script builder (maiden > blocks)
+
+- [ ] maiden shows the orange `blocks` button bottom right; it opens the builder with first_steps
+- [ ] the screen preview runs (notes under it); K2 stops and starts it, E2 changes cutoff
+- [ ] name it, run: the script plays in Verdandi with sound, the console shows matron's output;
+      stop ends it; maiden's file list has `code/<name>/<name>.lua`
+- [ ] open > pulse: the dial, slider and breathing ring look the same in the preview and in Verdandi
+- [ ] save under the name of a script that was not made in the builder (awake): it refuses
+- [ ] reload the page: the blocks of last time come back
+
 ## audio interface
 
 - [ ] SYSTEM > AUDIO: choose the interface as INPUT and OUTPUT, APPLY: norns restarts its audio

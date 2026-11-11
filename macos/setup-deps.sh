@@ -32,6 +32,11 @@ SC3_PLUGINS_COMMIT=b80a41b731922feac7755df5ba359d14dfb8f4d9
 MAIDEN_COMMIT=2e64f7d59284962ac68055dd556e3fd8515462f8
 # maiden's web app (react-scripts 1.x) needs the node its own tooling pins
 NODE_VERSION=v16.20.2
+# the script builder in maiden (macos/blocks, macos/install-blocks.sh): npm packages, by checksum
+BLOCKLY_VERSION=13.3.0
+BLOCKLY_SHA256=4b1ff98578bc8f4dbee81fa14ed00bf466b621b680da26f9dceaf29b4eda8e84
+FENGARI_WEB_VERSION=0.1.4
+FENGARI_WEB_SHA256=ad9dc3038acf2e2ca0d25ceebcb1607aea4e21892b7bf2b529cf54426f205fdb
 
 case "$DEPS" in *" "*) echo "setup-deps: '$DEPS' contains a space"; exit 1 ;; esac
 # the oldest macOS the app runs on: clang and cmake take it from here
@@ -208,6 +213,19 @@ if [ ! -x "$M/maiden" ]; then
     rm -rf "$M/app/build" && cp -R maiden/web/build "$M/app/"
     cp maiden/sources/*.json "$M/dist/sources/"
 fi
+
+echo "== script builder (blockly $BLOCKLY_VERSION, fengari-web $FENGARI_WEB_VERSION)"
+cd "$SRC"
+npm_package() {  # <name> <version> <sha256>: the npm tarball, checked, unpacked in <name>-<version>
+    [ -d "$1-$2" ] && return
+    local f="$1-$2.tgz"
+    curl -sSfLO "https://registry.npmjs.org/$1/-/$f"
+    echo "$3  $f" | shasum -a 256 -c -
+    mkdir -p "$1-$2" && tar xzf "$f" -C "$1-$2" --strip-components 1 && rm "$f"
+}
+npm_package blockly "$BLOCKLY_VERSION" "$BLOCKLY_SHA256"
+npm_package fengari-web "$FENGARI_WEB_VERSION" "$FENGARI_WEB_SHA256"
+"$REPO/macos/install-blocks.sh" "$M" "$SRC/blockly-$BLOCKLY_VERSION" "$SRC/fengari-web-$FENGARI_WEB_VERSION"
 
 echo "== licenses and sources of the bundled packages (macos/licenses.py)"
 python3 -I "$REPO/macos/licenses.py" fetch "$DEPS"

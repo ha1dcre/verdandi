@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Script Builder</title>
+<link rel="icon" href="../maiden_32.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="back" href="../" title="back to maiden">maiden</a>
+  <span class="title">script builder</span>
+  <label class="name">name <input id="name" spellcheck="false" autocomplete="off" maxlength="40" placeholder="my_script"></label>
+  <nav>
+    <button id="new" title="start with an empty workspace">new</button>
+    <button id="open" title="open a script made here, or an example">open</button>
+    <button id="save" title="write code/&lt;name&gt;/&lt;name&gt;.lua and its blocks">save</button>
+    <button id="run" class="primary" title="save, then play it in Verdandi">run</button>
+    <button id="stop" title="stop the script in Verdandi">stop</button>
+  </nav>
+  <span id="link" class="link off" title="the connection to norns (matron)">norns</span>
+</header>
+
+<main>
+  <div id="blockly"></div>
+  <aside>
+    <section class="preview">
+      <div class="preview-head">
+        <h2>screen</h2>
+        <span id="preview-state">off</span>
+        <button id="preview-toggle" title="run the blocks here, without sound">preview</button>
+      </div>
+      <canvas id="screen" width="128" height="64" aria-label="preview of the norns screen"></canvas>
+      <div class="controls">
+        <div class="keys">
+          <button data-key="1" title="K1">K1</button>
+          <button data-key="2" title="K2">K2</button>
+          <button data-key="3" title="K3">K3</button>
+        </div>
+        <div class="encs">
+          <div class="enc" data-enc="1" title="E1: scroll over it, or use - and +"><button data-d="-1">-</button><span>E1</span><button data-d="1">+</button></div>
+          <div class="enc" data-enc="2" title="E2: scroll over it, or use - and +"><button data-d="-1">-</button><span>E2</span><button data-d="1">+</button></div>
+          <div class="enc" data-enc="3" title="E3: scroll over it, or use - and +"><button data-d="-1">-</button><span>E3</span><button data-d="1">+</button></div>
+        </div>
+      </div>
+      <p id="notes" class="notes" aria-live="polite"></p>
+    </section>
+    <section class="out">
+      <div class="tabs" role="tablist">
+        <button role="tab" data-tab="lua" aria-selected="true">lua</button>
+        <button role="tab" data-tab="console" aria-selected="false">console</button>
+        <button id="copy" class="copy" title="copy the Lua">copy</button>
+      </div>
+      <pre id="lua" class="pane"></pre>
+      <pre id="console" class="pane" hidden></pre>
+    </section>
+  </aside>
+</main>
+<footer id="status" aria-live="polite"></footer>
+
+<dialog id="open-dialog">
+  <form method="dialog">
+    <h2>open</h2>
+    <ul id="open-list"></ul>
+    <menu><button value="cancel">cancel</button></menu>
+  </form>
+</dialog>
+
+<script src="vendor/blockly/blockly_compressed.js"></script>
+<script src="vendor/blockly/blocks_compressed.js"></script>
+<script src="vendor/blockly/lua_compressed.js"></script>
+<script src="vendor/blockly/msg/en.js"></script>
+<script src="vendor/fengari/fengari-web.js"></script>
+<script src="blocks.js"></script>
+<script src="preview.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

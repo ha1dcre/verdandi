@@ -69,6 +69,17 @@ device, maiden is the editor, the REPLs (matron :5555, sclang :5556) and the scr
 catalog (install / update). unlike the device everything listens on 127.0.0.1 only:
 the REPLs run arbitrary code, and a laptop is on networks a norns is not.
 
+the script builder (`blocks` in maiden, `http://127.0.0.1:5000/maiden/blocks/`) makes norns
+scripts from blocks: events (start, clock, keys, encoders, MIDI, the screen), PolyPerc,
+scales and sequins, the screen and the norns ui widgets, parameters, and Blockly's logic,
+loops, math, text, lists, variables and functions. it writes an ordinary script,
+`code/<name>/<name>.lua`, next to its blocks (`<name>.blocks.json`), so the script runs on any
+norns; it never writes into a folder it did not make. run and stop go through matron's
+REPL (:5555); the screen preview runs the same Lua in the page (fengari) on a small norns
+(`macos/blocks/preview_norns.lua`), with the real util, tabutil, musicutil, sequins and ui
+libraries and the norns font, without sound. `macos/setup-deps.sh` installs it into maiden's
+web app with `macos/install-blocks.sh` (Blockly and fengari-web from npm, by checksum).
+
 the window is the norns screen (resizable). controls:
 
 | keys (window focused) | norns                                  |
@@ -181,6 +192,8 @@ NORNS_HARDWARE_KEYS=1 <lua 5.3> macos/tests/keyboard_hardware_test.lua
 <lua 5.3> macos/tests/output_fader_test.lua
 d=$(mktemp -d); HOME=$d <lua 5.3> macos/tests/virtual_home_test.lua lua/core/virtual_home.lua
 macos/tests/norns_probe.sh <commands.lua>   # boot norns, drive its REPL, stop it
+node macos/tests/blocks_test.js <deps>/src/blockly-13.3.0 <deps>/prefix <dir with node_modules/jsdom>
+   # the script builder's Lua, run on a stand-in norns (jsdom once: see the test's header)
 ```
 
 what only a person with the hardware can test: `macos/docs/test-checklist.md`.

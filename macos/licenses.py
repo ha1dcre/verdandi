@@ -4,7 +4,8 @@
   python3 -I licenses.py fetch <deps>
       once, online (macos/setup-deps.sh): the license texts and the exact sources of what is
       built here rather than taken from homebrew (jack, lua, nng, libmonome, SuperCollider with
-      the libraries in its source, sc3-plugins, maiden with its Go modules and web packages),
+      the libraries in its source, sc3-plugins, maiden with its Go modules and web packages,
+      Blockly and fengari-web of the script builder),
       into <deps>/licenses/<component>/ (license texts, source.json)
 
   python3 -I licenses.py collect <deps> <bottles> <repo> <app Resources> <out>
@@ -191,6 +192,21 @@ def fetch(deps):
                 fetch_web(deps, src, tmp)
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
+    # the script builder's npm packages (macos/install-blocks.sh puts them into maiden's web app)
+    for name, title, var, lic in [('blockly', 'Blockly', 'BLOCKLY', 'Apache-2.0'),
+                                  ('fengari-web', 'fengari-web', 'FENGARI_WEB', 'MIT')]:
+        if have(deps, name):
+            continue
+        v, sha = setup_var(var + '_VERSION'), setup_var(var + '_SHA256')
+        url = 'https://registry.npmjs.org/%s/-/%s-%s.tgz' % (name, name, v)
+        data = get(url)
+        if sha256(data) != sha:
+            raise SystemExit('licenses: %s does not match %s_SHA256' % (url, var))
+        with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as tf:
+            text = tf.extractfile('package/LICENSE').read()
+        fetch_component(deps, name, {'name': title, 'version': v, 'license': lic, 'source': url, 'sha256': sha,
+                                     'note': 'in the script builder of maiden (macos/blocks, macos/install-blocks.sh)'},
+                        {'LICENSE': text})
     print('licenses: in %s' % os.path.join(deps, 'licenses'))
 
 
@@ -283,7 +299,8 @@ REPO_PARTS = [
                                                             'resources/bmp/bmp-LICENSE.txt', 'resources/bmp/tom-thumb-LICENSE.txt']),
 ]
 # built here, by the files they put into the app
-BUILT = ['jack', 'lua', 'nng', 'libmonome', 'supercollider', 'sc3-plugins', 'maiden', 'maiden-go', 'maiden-web']
+BUILT = ['jack', 'lua', 'nng', 'libmonome', 'supercollider', 'sc3-plugins', 'maiden', 'maiden-go', 'maiden-web',
+         'blockly', 'fengari-web']
 # the GNU tools in deps/gnubin
 GNU = ['coreutils', 'findutils', 'gnu-sed', 'grep']
 

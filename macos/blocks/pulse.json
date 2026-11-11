@@ -1,0 +1,616 @@
+{
+ "format": "verdandi-blocks",
+ "version": 1,
+ "name": "pulse",
+ "workspace": {
+  "variables": [
+   {
+    "name": "playing",
+    "id": "v_playing"
+   }
+  ],
+  "blocks": {
+   "languageVersion": 0,
+   "blocks": [
+    {
+     "type": "nv_init",
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_param_add",
+        "fields": {
+         "NAME": "size",
+         "MIN": 4,
+         "MAX": 26,
+         "DEFAULT": 12
+        },
+        "next": {
+         "block": {
+          "type": "nv_param_add",
+          "fields": {
+           "NAME": "spread",
+           "MIN": 1,
+           "MAX": 8,
+           "DEFAULT": 3
+          },
+          "next": {
+           "block": {
+            "type": "variables_set",
+            "fields": {
+             "VAR": {
+              "id": "v_playing"
+             }
+            },
+            "inputs": {
+             "VALUE": {
+              "block": {
+               "type": "logic_boolean",
+               "fields": {
+                "BOOL": "TRUE"
+               }
+              }
+             }
+            },
+            "next": {
+             "block": {
+              "type": "nv_sound_set",
+              "fields": {
+               "PARAM": "release"
+              },
+              "inputs": {
+               "VALUE": {
+                "shadow": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 1.2
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_every",
+     "fields": {
+      "DIV": "1/2"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "controls_if",
+        "inputs": {
+         "IF0": {
+          "block": {
+           "type": "variables_get",
+           "fields": {
+            "VAR": {
+             "id": "v_playing"
+            }
+           }
+          }
+         },
+         "DO0": {
+          "block": {
+           "type": "nv_sound_set",
+           "fields": {
+            "PARAM": "cutoff"
+           },
+           "inputs": {
+            "VALUE": {
+             "block": {
+              "type": "math_arithmetic",
+              "fields": {
+               "OP": "MULTIPLY"
+              },
+              "inputs": {
+               "A": {
+                "block": {
+                 "type": "nv_param_get",
+                 "fields": {
+                  "NAME": "size"
+                 }
+                }
+               },
+               "B": {
+                "block": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 120
+                 }
+                }
+               }
+              }
+             }
+            }
+           },
+           "next": {
+            "block": {
+             "type": "nv_play_note",
+             "inputs": {
+              "NOTE": {
+               "block": {
+                "type": "nv_scale_note",
+                "fields": {
+                 "SCALE": "Dorian"
+                },
+                "inputs": {
+                 "DEGREE": {
+                  "block": {
+                   "type": "math_random_int",
+                   "inputs": {
+                    "FROM": {
+                     "shadow": {
+                      "type": "math_number",
+                      "fields": {
+                       "NUM": 1
+                      }
+                     }
+                    },
+                    "TO": {
+                     "block": {
+                      "type": "math_arithmetic",
+                      "fields": {
+                       "OP": "MULTIPLY"
+                      },
+                      "inputs": {
+                       "A": {
+                        "block": {
+                         "type": "nv_param_get",
+                         "fields": {
+                          "NAME": "spread"
+                         }
+                        }
+                       },
+                       "B": {
+                        "block": {
+                         "type": "math_number",
+                         "fields": {
+                          "NUM": 2
+                         }
+                        }
+                       }
+                      }
+                     }
+                    }
+                   }
+                  }
+                 },
+                 "ROOT": {
+                  "shadow": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 50
+                   }
+                  }
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_enc",
+     "fields": {
+      "ENC": "2"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_param_change",
+        "fields": {
+         "NAME": "size"
+        },
+        "inputs": {
+         "DELTA": {
+          "block": {
+           "type": "nv_enc_delta"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_enc",
+     "fields": {
+      "ENC": "3"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_param_change",
+        "fields": {
+         "NAME": "spread"
+        },
+        "inputs": {
+         "DELTA": {
+          "block": {
+           "type": "nv_enc_delta"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_key",
+     "fields": {
+      "KEY": "2",
+      "STATE": "1"
+     },
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "variables_set",
+        "fields": {
+         "VAR": {
+          "id": "v_playing"
+         }
+        },
+        "inputs": {
+         "VALUE": {
+          "block": {
+           "type": "logic_negate",
+           "inputs": {
+            "BOOL": {
+             "block": {
+              "type": "variables_get",
+              "fields": {
+               "VAR": {
+                "id": "v_playing"
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "nv_redraw",
+     "inputs": {
+      "DO": {
+       "block": {
+        "type": "nv_screen_circle",
+        "fields": {
+         "MODE": "stroke"
+        },
+        "inputs": {
+         "X": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 64
+           }
+          }
+         },
+         "Y": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 32
+           }
+          }
+         },
+         "LEVEL": {
+          "shadow": {
+           "type": "math_number",
+           "fields": {
+            "NUM": 15
+           }
+          }
+         },
+         "R": {
+          "block": {
+           "type": "math_arithmetic",
+           "fields": {
+            "OP": "ADD"
+           },
+           "inputs": {
+            "A": {
+             "block": {
+              "type": "nv_param_get",
+              "fields": {
+               "NAME": "size"
+              }
+             }
+            },
+            "B": {
+             "block": {
+              "type": "math_arithmetic",
+              "fields": {
+               "OP": "MULTIPLY"
+              },
+              "inputs": {
+               "A": {
+                "block": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 4
+                 }
+                }
+               },
+               "B": {
+                "block": {
+                 "type": "math_trig",
+                 "fields": {
+                  "OP": "SIN"
+                 },
+                 "inputs": {
+                  "NUM": {
+                   "block": {
+                    "type": "math_arithmetic",
+                    "fields": {
+                     "OP": "MULTIPLY"
+                    },
+                    "inputs": {
+                     "A": {
+                      "block": {
+                       "type": "nv_beats"
+                      }
+                     },
+                     "B": {
+                      "block": {
+                       "type": "math_number",
+                       "fields": {
+                        "NUM": 180
+                       }
+                      }
+                     }
+                    }
+                   }
+                  }
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        },
+        "next": {
+         "block": {
+          "type": "nv_screen_circle",
+          "fields": {
+           "MODE": "fill"
+          },
+          "inputs": {
+           "X": {
+            "shadow": {
+             "type": "math_number",
+             "fields": {
+              "NUM": 64
+             }
+            }
+           },
+           "Y": {
+            "shadow": {
+             "type": "math_number",
+             "fields": {
+              "NUM": 32
+             }
+            }
+           },
+           "R": {
+            "shadow": {
+             "type": "math_number",
+             "fields": {
+              "NUM": 2
+             }
+            }
+           },
+           "LEVEL": {
+            "block": {
+             "type": "math_modulo",
+             "inputs": {
+              "DIVIDEND": {
+               "block": {
+                "type": "nv_frame"
+               }
+              },
+              "DIVISOR": {
+               "shadow": {
+                "type": "math_number",
+                "fields": {
+                 "NUM": 16
+                }
+               }
+              }
+             }
+            }
+           }
+          },
+          "next": {
+           "block": {
+            "type": "nv_ui_dial",
+            "fields": {
+             "NAME": "size"
+            },
+            "inputs": {
+             "X": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 4
+               }
+              }
+             },
+             "Y": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 18
+               }
+              }
+             },
+             "SIZE": {
+              "shadow": {
+               "type": "math_number",
+               "fields": {
+                "NUM": 22
+               }
+              }
+             }
+            },
+            "next": {
+             "block": {
+              "type": "nv_ui_slider",
+              "fields": {
+               "DIR": "up",
+               "NAME": "spread"
+              },
+              "inputs": {
+               "X": {
+                "shadow": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 118
+                 }
+                }
+               },
+               "Y": {
+                "shadow": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 12
+                 }
+                }
+               },
+               "W": {
+                "shadow": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 3
+                 }
+                }
+               },
+               "H": {
+                "shadow": {
+                 "type": "math_number",
+                 "fields": {
+                  "NUM": 40
+                 }
+                }
+               }
+              },
+              "next": {
+               "block": {
+                "type": "nv_ui_playback",
+                "inputs": {
+                 "X": {
+                  "shadow": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 4
+                   }
+                  }
+                 },
+                 "Y": {
+                  "shadow": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 4
+                   }
+                  }
+                 },
+                 "SIZE": {
+                  "shadow": {
+                   "type": "math_number",
+                   "fields": {
+                    "NUM": 6
+                   }
+                  }
+                 },
+                 "PLAYING": {
+                  "block": {
+                   "type": "variables_get",
+                   "fields": {
+                    "VAR": {
+                     "id": "v_playing"
+                    }
+                   }
+                  }
+                 }
+                },
+                "next": {
+                 "block": {
+                  "type": "nv_screen_text",
+                  "fields": {
+                   "ALIGN": "text_center"
+                  },
+                  "inputs": {
+                   "TEXT": {
+                    "shadow": {
+                     "type": "text",
+                     "fields": {
+                      "TEXT": "pulse"
+                     }
+                    }
+                   },
+                   "X": {
+                    "shadow": {
+                     "type": "math_number",
+                     "fields": {
+                      "NUM": 64
+                     }
+                    }
+                   },
+                   "Y": {
+                    "shadow": {
+                     "type": "math_number",
+                     "fields": {
+                      "NUM": 62
+                     }
+                    }
+                   },
+                   "LEVEL": {
+                    "shadow": {
+                     "type": "math_number",
+                     "fields": {
+                      "NUM": 4
+                     }
+                    }
+                   }
+                  }
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   ]
+  }
+ }
+}
