@@ -723,5 +723,54 @@
    "input": 0,
    "level": 1
   }
+ },
+ "design": {
+  "layers": [
+   {
+    "id": "stars1",
+    "type": "stars",
+    "props": {
+     "count": {
+      "v": 40
+     },
+     "speed": {
+      "v": 0.3,
+      "anim": {
+       "kind": "note",
+       "decay": 0.8,
+       "from": 0.3,
+       "to": 2.5
+      }
+     },
+     "level": {
+      "v": 5
+     }
+    }
+   },
+   {
+    "id": "sparks1",
+    "type": "sparks",
+    "props": {
+     "x": {
+      "v": 64
+     },
+     "y": {
+      "v": 32
+     },
+     "r": {
+      "v": 26
+     },
+     "count": {
+      "v": 6
+     },
+     "gravity": {
+      "v": 20
+     },
+     "level": {
+      "v": 9
+     }
+    }
+   }
+  ]
  }
 }

@@ -776,5 +776,104 @@
    "input": 0,
    "level": 1
   }
+ },
+ "design": {
+  "layers": [
+   {
+    "id": "stars1",
+    "type": "stars",
+    "props": {
+     "count": {
+      "v": 30
+     },
+     "speed": {
+      "v": 0.2
+     },
+     "level": {
+      "v": 4
+     }
+    }
+   },
+   {
+    "id": "orbit1",
+    "type": "orbit",
+    "props": {
+     "x": {
+      "v": 64
+     },
+     "y": {
+      "v": 36
+     },
+     "r": {
+      "v": 24
+     },
+     "dots": {
+      "v": 2
+     },
+     "beats": {
+      "v": 8
+     },
+     "size": {
+      "v": 2
+     },
+     "level": {
+      "v": 5
+     }
+    }
+   },
+   {
+    "id": "rings1",
+    "type": "rings",
+    "props": {
+     "x": {
+      "v": 64
+     },
+     "y": {
+      "v": 36
+     },
+     "r": {
+      "v": 50
+     },
+     "time": {
+      "v": 1.4
+     },
+     "level": {
+      "v": 8
+     }
+    }
+   },
+   {
+    "id": "meter1",
+    "type": "bar",
+    "props": {
+     "x": {
+      "v": 24
+     },
+     "y": {
+      "v": 51
+     },
+     "w": {
+      "v": 80
+     },
+     "h": {
+      "v": 2
+     },
+     "value": {
+      "v": 0,
+      "anim": {
+       "kind": "level",
+       "from": 0,
+       "to": 1
+      }
+     },
+     "level": {
+      "v": 8
+     },
+     "dir": {
+      "v": "across"
+     }
+    }
+   }
+  ]
  }
 }

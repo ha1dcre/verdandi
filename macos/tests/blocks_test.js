@@ -76,7 +76,7 @@ function run(name, code) {
 // 1. the example the builder opens with
 {
   const demo = JSON.parse(fs.readFileSync(path.join(repo, 'macos', 'blocks', 'demo.json')));
-  const code = generate(demo.workspace, demo.name, demo.patch);
+  const code = generate(demo.workspace, demo.name, demo.patch, demo.design);
   const out = run('demo', code);
   check('demo: runs to the end', out.includes('-- ok'), out.slice(-5).join('\n'));
   check('demo: Weave with its patch', /^engine\.name = 'Weave'$/m.test(code) && /^\s*_blk_sound_init\(\)$/m.test(code) &&
@@ -105,7 +105,7 @@ function run(name, code) {
 // 1b. the visual example: widgets, animation, both encoders
 {
   const doc = JSON.parse(fs.readFileSync(path.join(repo, 'macos', 'blocks', 'pulse.json')));
-  const code = generate(doc.workspace, doc.name, doc.patch);
+  const code = generate(doc.workspace, doc.name, doc.patch, doc.design);
   const out = run('pulse', code);
   const text = out.join('\n');
   check('pulse: runs to the end', out.includes('-- ok'), out.slice(-5).join('\n'));
@@ -122,7 +122,7 @@ function run(name, code) {
 {
   const load = name => JSON.parse(fs.readFileSync(path.join(repo, 'macos', 'blocks', name + '.json')));
   let doc = load('looper');
-  let out = run('looper', generate(doc.workspace, doc.name, doc.patch));
+  let out = run('looper', generate(doc.workspace, doc.name, doc.patch, doc.design));
   let all = out.join('\n');
   check('looper: runs, no engine (its sound is off)', out.includes('-- ok') && !/engine\.name|engine\./.test(all), out.slice(-4).join('\n'));
   // K2 records; K3 while recording finishes the loop (its length is where the playhead was)
@@ -130,12 +130,12 @@ function run(name, code) {
     out.slice(out.indexOf('-- keys'), out.indexOf('-- keys') + 30).join(' | '));
   check('looper: E3 turns the speed', /params\.set speed 1\.050\nsoftcut\.rate 1 1\.050/.test(all), out.filter(l => /speed|rate/.test(l)).join(', '));
   doc = load('drums');
-  out = run('drums', generate(doc.workspace, doc.name, doc.patch));
+  out = run('drums', generate(doc.workspace, doc.name, doc.patch, doc.design));
   all = out.join('\n');
   const notes = out.filter(l => l.startsWith('engine.note_on')).map(l => Number(l.split(' ')[2]).toFixed(1));
   check('drums: runs, kick on step 1 of 3 in 8', out.includes('-- ok') && notes[0] === '65.4', notes.join(' '));
   doc = load('grid_keys');
-  out = run('grid_keys', generate(doc.workspace, doc.name, doc.patch));
+  out = run('grid_keys', generate(doc.workspace, doc.name, doc.patch, doc.design));
   all = out.join('\n');
   check('grid keys: key 3,2 plays note 73 and ends it', /-- grid\nengine\.note_on 73 554\.365 0\.787\nengine\.note_off 73/.test(all),
     out.slice(out.indexOf('-- grid'), out.indexOf('-- grid') + 4).join(' | '));
@@ -194,6 +194,15 @@ function run(name, code) {
   check('visuals: runs, draws stars, orbit, rings, its note name', vout.includes('-- ok') && vout.some(l => l.startsWith('screen.circle 64 28')) &&
     vout.some(l => /^screen\.text_center [A-G]#?\d$/.test(l)), vout.filter(l => /text_center|circle 64 28/.test(l)).slice(0, 4).join(' | '));
   check('design: a design without blocks still draws', alone.includes('-- ok') && alone.some(l => l.startsWith('screen.circle')), alone.slice(-4).join(' | '));
+}
+
+// 1e. every example has a screen design, drawn first in redraw()
+for (const name of ['demo', 'pulse', 'looper', 'drums', 'grid_keys', 'visuals']) {
+  const doc = JSON.parse(fs.readFileSync(path.join(repo, 'macos', 'blocks', name + '.json')));
+  const code = generate(doc.workspace, doc.name, doc.patch, doc.design);
+  const out = run(name + '_design', code);
+  check(name + ': its screen design draws, before the blocks', (doc.design && doc.design.layers.length > 0) &&
+    /function redraw\(\)\n  screen\.clear\(\)\n  _blk_design\(\)/.test(code) && out.includes('-- ok'), out.slice(-3).join(' | '));
 }
 
 // 2. every norns block, each where it belongs, with an input in every slot

@@ -842,5 +842,60 @@
    "input": 0,
    "level": 1
   }
+ },
+ "design": {
+  "layers": [
+   {
+    "id": "rings1",
+    "type": "rings",
+    "props": {
+     "x": {
+      "v": 64
+     },
+     "y": {
+      "v": 34
+     },
+     "r": {
+      "v": 70
+     },
+     "time": {
+      "v": 0.5
+     },
+     "level": {
+      "v": 6
+     }
+    }
+   },
+   {
+    "id": "snow1",
+    "type": "noise",
+    "props": {
+     "x": {
+      "v": 0
+     },
+     "y": {
+      "v": 12
+     },
+     "w": {
+      "v": 128
+     },
+     "h": {
+      "v": 40
+     },
+     "density": {
+      "v": 0,
+      "anim": {
+       "kind": "note",
+       "decay": 0.15,
+       "from": 0,
+       "to": 0.06
+      }
+     },
+     "level": {
+      "v": 5
+     }
+    }
+   }
+  ]
  }
 }

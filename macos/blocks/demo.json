@@ -694,5 +694,89 @@
    "input": 0,
    "level": 1
   }
+ },
+ "design": {
+  "layers": [
+   {
+    "id": "wave1",
+    "type": "wave",
+    "props": {
+     "y": {
+      "v": 46
+     },
+     "height": {
+      "v": 1,
+      "anim": {
+       "kind": "level",
+       "from": 0.5,
+       "to": 4
+      }
+     },
+     "cycles": {
+      "v": 2
+     },
+     "beats": {
+      "v": 4
+     },
+     "level": {
+      "v": 2
+     }
+    }
+   },
+   {
+    "id": "rings1",
+    "type": "rings",
+    "props": {
+     "x": {
+      "v": 104
+     },
+     "y": {
+      "v": 22
+     },
+     "r": {
+      "v": 30
+     },
+     "time": {
+      "v": 0.9
+     },
+     "level": {
+      "v": 7
+     }
+    }
+   },
+   {
+    "id": "orbit1",
+    "type": "orbit",
+    "props": {
+     "x": {
+      "v": 104
+     },
+     "y": {
+      "v": 22
+     },
+     "r": {
+      "v": 9
+     },
+     "dots": {
+      "v": 3
+     },
+     "beats": {
+      "v": 4
+     },
+     "size": {
+      "v": 2
+     },
+     "level": {
+      "v": 10,
+      "anim": {
+       "kind": "note",
+       "decay": 0.3,
+       "from": 6,
+       "to": 15
+      }
+     }
+    }
+   }
+  ]
  }
 }

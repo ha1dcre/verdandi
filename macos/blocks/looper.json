@@ -803,5 +803,103 @@
    "input": 0,
    "level": 1
   }
+ },
+ "design": {
+  "layers": [
+   {
+    "id": "snow1",
+    "type": "noise",
+    "props": {
+     "x": {
+      "v": 0
+     },
+     "y": {
+      "v": 14
+     },
+     "w": {
+      "v": 120
+     },
+     "h": {
+      "v": 32
+     },
+     "density": {
+      "v": 0.01,
+      "anim": {
+       "kind": "level",
+       "from": 0.005,
+       "to": 0.05
+      }
+     },
+     "level": {
+      "v": 2
+     }
+    }
+   },
+   {
+    "id": "clock1",
+    "type": "arc",
+    "props": {
+     "x": {
+      "v": 64
+     },
+     "y": {
+      "v": 30
+     },
+     "r": {
+      "v": 14
+     },
+     "from": {
+      "v": 0
+     },
+     "to": {
+      "v": 0,
+      "anim": {
+       "kind": "looper",
+       "looper": 1,
+       "from": 0,
+       "to": 1
+      }
+     },
+     "width": {
+      "v": 2
+     },
+     "level": {
+      "v": 4
+     }
+    }
+   },
+   {
+    "id": "meter1",
+    "type": "bar",
+    "props": {
+     "x": {
+      "v": 123
+     },
+     "y": {
+      "v": 14
+     },
+     "w": {
+      "v": 4
+     },
+     "h": {
+      "v": 32
+     },
+     "value": {
+      "v": 0,
+      "anim": {
+       "kind": "level",
+       "from": 0,
+       "to": 1
+      }
+     },
+     "level": {
+      "v": 12
+     },
+     "dir": {
+      "v": "up"
+     }
+    }
+   }
+  ]
  }
 }
