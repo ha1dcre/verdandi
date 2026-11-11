@@ -12,7 +12,9 @@ def build_link(bld):
             'link/modules/asio-standalone/asio/include',
         ],
         cxxflags=[
-            '-O3',
+            # macOS: Apple clang 21 at -O2/-O3 builds a Link whose network thread
+            # ("Link Main") never runs, so it opens no sockets and finds no peers; -O1 works
+            '-O1' if bld.env.NORNS_MACOS else '-O3',
             '-Wall',
             '-Wno-multichar',
             '-Wno-psabi',
