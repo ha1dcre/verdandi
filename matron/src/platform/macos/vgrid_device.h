@@ -25,6 +25,10 @@ typedef struct vgrid_device vgrid_device_t;
 // on_change runs on the device thread whenever the leds changed
 extern vgrid_device_t *vgrid_open(const char *id, int cols, int rows, void (*on_change)(void *ctx), void *ctx);
 extern vgrid_device_t *vgrid_open_arc(const char *id, int rings, void (*on_change)(void *ctx), void *ctx);
+// a grid (rings 0) or arc (rings > 0) that libmonome reports with this serial (it must read
+// as a mext one, "m<digits>"); used for hardware reached through serialosc (serialosc_bridge.h)
+extern vgrid_device_t *vgrid_open_serial(const char *id, const char *serial, int cols, int rows, int rings,
+                                         void (*on_change)(void *ctx), void *ctx);
 extern void vgrid_close(vgrid_device_t *g);
 
 // the path to hand to libmonome / dev_list_add

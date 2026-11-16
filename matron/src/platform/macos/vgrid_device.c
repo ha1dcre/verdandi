@@ -56,9 +56,10 @@ static void *run(void *arg) {
     return NULL;
 }
 
-// rings > 0: an arc, otherwise a grid of cols x rows
-static vgrid_device_t *open_device(const char *id, int cols, int rows, int rings, void (*on_change)(void *ctx),
-                                   void *ctx) {
+// rings > 0: an arc, otherwise a grid of cols x rows. serial: what libmonome reads from the
+// link name, NULL for the virtual devices' fixed ones
+static vgrid_device_t *open_device(const char *id, const char *serial, int cols, int rows, int rings,
+                                   void (*on_change)(void *ctx), void *ctx) {
     vgrid_device_t *g = (vgrid_device_t *)calloc(1, sizeof *g);
     if (g == NULL) {
         return NULL;
@@ -88,7 +89,10 @@ static vgrid_device_t *open_device(const char *id, int cols, int rows, int rings
         goto fail;
     }
     // distinct serials, so a grid and an arc can be plugged in at the same time
-    snprintf(g->path, sizeof g->path, rings > 0 ? "%s/arc-m0000002" : "%s/grid-m0000001", g->dir);
+    if (serial == NULL) {
+        serial = rings > 0 ? "m0000002" : "m0000001";
+    }
+    snprintf(g->path, sizeof g->path, "%s/%s-%s", g->dir, rings > 0 ? "arc" : "grid", serial);
     if (symlink(slave, g->path) < 0) {
         rmdir(g->dir);
         goto fail;
@@ -121,11 +125,16 @@ fail:
 }
 
 vgrid_device_t *vgrid_open(const char *id, int cols, int rows, void (*on_change)(void *ctx), void *ctx) {
-    return open_device(id, cols, rows, 0, on_change, ctx);
+    return open_device(id, NULL, cols, rows, 0, on_change, ctx);
 }
 
 vgrid_device_t *vgrid_open_arc(const char *id, int rings, void (*on_change)(void *ctx), void *ctx) {
-    return open_device(id, 0, 0, rings, on_change, ctx);
+    return open_device(id, NULL, 0, 0, rings, on_change, ctx);
+}
+
+vgrid_device_t *vgrid_open_serial(const char *id, const char *serial, int cols, int rows, int rings,
+                                  void (*on_change)(void *ctx), void *ctx) {
+    return open_device(id, serial, cols, rows, rings, on_change, ctx);
 }
 
 void vgrid_close(vgrid_device_t *g) {

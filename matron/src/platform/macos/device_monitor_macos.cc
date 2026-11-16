@@ -2,7 +2,9 @@
  * device_monitor_macos.cc
  *
  * macOS replacement for device_monitor.cc (udev). three sources, all on the device runloop:
- *  - IOKit serial ports (/dev/cu.*): monome grid/arc, crow, other serial devices
+ *  - IOKit serial ports (/dev/cu.*): monome grid/arc, crow, other serial devices. monome
+ *    ports go through serialosc_bridge.h: opened directly, or reached through serialosc
+ *    when it runs (it reads the port itself)
  *  - IOHIDManager: gamepads, joysticks, multi-axis controllers (keyboard: see sdl_bridge)
  *  - CoreMIDI: entities and lone (app) endpoints, diffed on every setup change
  *
@@ -28,6 +30,7 @@
 
 #include "platform/macos/device_monitor_macos.h"
 #include "platform/macos/device_runloop.h"
+#include "platform/macos/serialosc_bridge.h"
 
 namespace {
 
@@ -52,6 +55,7 @@ IONotificationPortRef notify_port = NULL;
 io_iterator_t serial_add_it = 0;
 io_iterator_t serial_rm_it = 0;
 IOHIDManagerRef hid_mgr = NULL;
+CFRunLoopTimerRef serialosc_timer = NULL;
 
 //--- helpers
 
@@ -126,7 +130,7 @@ void serial_add(const serial_dev &s) {
     switch (s.type) {
     case DEV_TYPE_MONOME:
         fprintf(stderr, "dev_monitor: TTY appears to be a monome\n");
-        dev_list_add(DEV_TYPE_MONOME, s.path.c_str(), strdup(s.name.c_str()), NULL);
+        serialosc_tty_added(s.path.c_str(), s.name.c_str(), s.serial.c_str());
         break;
     case DEV_TYPE_CROW:
         fprintf(stderr, "tty is a crow\n");
@@ -195,13 +199,25 @@ void serial_terminated(void *refcon, io_iterator_t it) {
         IORegistryEntryGetRegistryEntryID(service, &id);
         auto found = serials.find(id);
         if (found != serials.end()) {
-            if (live) {
+            if (live && found->second.type == DEV_TYPE_MONOME) {
+                serialosc_tty_removed(found->second.path.c_str());
+            } else if (live) {
                 dev_list_remove(found->second.type, found->second.path.c_str());
             }
             serials.erase(found);
         }
         IOObjectRelease(service);
     }
+}
+
+//--- monome devices for serialosc_bridge
+
+void monome_add(const char *path, const char *name) {
+    dev_list_add(DEV_TYPE_MONOME, path, strdup(name), NULL);
+}
+
+void monome_remove(const char *path) {
+    dev_list_remove(DEV_TYPE_MONOME, path);
 }
 
 //--- hid
@@ -397,12 +413,29 @@ void dev_monitor_init(void) {
       }
 
       coremidi_set_setup_changed(midi_setup_changed);
+
+      serialosc_ops_t ops = {monome_add, monome_remove};
+      serialosc_init(&ops);
+      serialosc_timer = CFRunLoopTimerCreateWithHandler(NULL, CFAbsoluteTimeGetCurrent() + 0.1, 0.1, 0, 0,
+                                                        ^(CFRunLoopTimerRef t) {
+                                                          (void)t;
+                                                          if (live) {
+                                                              serialosc_tick();
+                                                          }
+                                                        });
+      CFRunLoopAddTimer(rl, serialosc_timer, kCFRunLoopDefaultMode);
     });
 }
 
 void dev_monitor_deinit(void) {
     device_runloop_sync(^{
       coremidi_set_setup_changed(NULL);
+      if (serialosc_timer != NULL) {
+          CFRunLoopTimerInvalidate(serialosc_timer);
+          CFRelease(serialosc_timer);
+          serialosc_timer = NULL;
+      }
+      serialosc_deinit();
       if (hid_mgr != NULL) {
           IOHIDManagerClose(hid_mgr, kIOHIDOptionsTypeNone);
           CFRelease(hid_mgr);

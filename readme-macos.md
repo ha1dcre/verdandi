@@ -260,6 +260,11 @@ see `matron/src/platform/macos/` and `macos/`:
 - devices: CoreMIDI (midi, plus a virtual "norns" port), IOKit (grid, arc, crow, serial),
   IOHIDManager (gamepads, joysticks), the window keyboard as hid keyboard; all translated
   to the linux device model and evdev codes the lua libraries expect
+- grids and arcs with serialosc running (Max, Ableton): serialosc reads every monome port
+  itself, and a second reader loses keys, so while it runs a grid or arc is reached through
+  it (OSC, a pty speaking mext to libmonome; `serialosc_bridge.cc`); the last app to claim a
+  device gets its keys. without serialosc the port is opened directly, as on the device.
+  test: `macos/tests/serialosc_test.cc`
 - the cocoa main thread owns the window; matron runs on its own thread
 - no pi hardware: oled, gpio keys/encoders, battery, i2c are stubbed; stat via mach
 - GNU coreutils/findutils/sed/grep are first on norns' PATH, as scripts expect GNU tools
