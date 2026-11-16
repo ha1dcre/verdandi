@@ -257,6 +257,19 @@ _norns.restart = function()
   _norns.reset()
 end
 
+-- quit the app (macOS: window closed, Cmd-Q). like SLEEP on a norns: remember the state
+-- (device slots, last script) and let the script clean up. called once by matron after its
+-- event loop stopped (w_quit). nothing is saved before state.resume ran: a quit during
+-- startup would otherwise overwrite the saved state with the defaults.
+_norns.quit = function()
+  if not norns.state.resumed then return end
+  hook.system_pre_shutdown()
+  print("QUIT")
+  norns.state.clean_shutdown = true
+  norns.state.save()
+  pcall(cleanup)
+end
+
 -- startup function will be run after I/O subsystems are initialized,
 -- but before I/O event loop starts ticking (see readme-script.md)
 _startup = function()

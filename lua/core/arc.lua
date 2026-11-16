@@ -206,6 +206,8 @@ _norns.arc = {}
 _norns.arc.add = function(id, serial, name, dev)
   local g = Arc.new(id, serial, name, dev)
   Arc.devices[id] = g
+  -- macOS: a real device takes a slot that a closed virtual one holds (core/vport.lua)
+  vport.promote_hardware(Arc.vports, Arc.devices)
   Arc.update_devices()
   if Arc.add ~= nil then Arc.add(g) end
 end

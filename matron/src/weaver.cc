@@ -725,6 +725,25 @@ void w_post_startup(void) {
     l_report(lvm, l_docall(lvm, 0, 0));
 }
 
+// quitting the app (window closed, Cmd-Q, 'q' on the terminal): the lua side remembers the
+// system state as SLEEP does on a norns (_norns.quit in lua/core/norns.lua). runs on the lua
+// thread after the event loop has stopped, before anything is torn down; once only.
+void w_quit(void) {
+    static bool done = false;
+    if (done) {
+        return;
+    }
+    done = true;
+    lua_getglobal(lvm, "_norns");
+    lua_getfield(lvm, -1, "quit");
+    lua_remove(lvm, -2);
+    if (!lua_isfunction(lvm, -1)) {
+        lua_pop(lvm, 1);
+        return;
+    }
+    l_report(lvm, l_docall(lvm, 0, 0));
+}
+
 void w_deinit(void) {
     fprintf(stderr, "shutting down lua vm\n");
     lua_close(lvm);

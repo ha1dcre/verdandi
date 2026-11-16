@@ -1,5 +1,7 @@
 -- State
 
+local vport = require 'vport'
+
 local state = {}
 state.script = ''
 state.path = _path.code
@@ -71,11 +73,16 @@ state.resume = function()
     state.clock.midi_out = {}
   end
 
+  -- macOS: a real grid/arc takes the slots a closed virtual one still holds (core/vport.lua)
+  vport.promote_hardware(grid.vports, grid.devices)
+  vport.promote_hardware(arc.vports, arc.devices)
+
   -- update vports
   midi.update_devices()
   grid.update_devices()
   arc.update_devices()
   hid.update_devices()
+  state.resumed = true
 
   -- only resume the script if we shut down cleanly
   if state.clean_shutdown and state.script ~= '' then

@@ -194,6 +194,8 @@ _norns.grid = {}
 _norns.grid.add = function(id, serial, name, dev)
   local g = Grid.new(id,serial,name,dev)
   Grid.devices[id] = g
+  -- macOS: a real device takes a slot that a closed virtual one holds (core/vport.lua)
+  vport.promote_hardware(Grid.vports, Grid.devices)
   Grid.update_devices()
   if Grid.add ~= nil then Grid.add(g) end
 end

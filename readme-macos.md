@@ -265,6 +265,12 @@ see `matron/src/platform/macos/` and `macos/`:
   it (OSC, a pty speaking mext to libmonome; `serialosc_bridge.cc`); the last app to claim a
   device gets its keys. without serialosc the port is opened directly, as on the device.
   test: `macos/tests/serialosc_test.cc`
+- device slots: a slot that holds the virtual grid or arc while its window is closed goes to
+  a connected real grid/arc (the virtual one takes its old slot when opened again;
+  `vport.promote_hardware` in `lua/core/vport.lua`). quitting the app saves the system state
+  like SLEEP on a norns (`_norns.quit`, called by matron after its event loop), so slot
+  choices stay and the last script loads on the next start. test:
+  `macos/tests/device_slots_test.lua`
 - the cocoa main thread owns the window; matron runs on its own thread
 - no pi hardware: oled, gpio keys/encoders, battery, i2c are stubbed; stat via mach
 - GNU coreutils/findutils/sed/grep are first on norns' PATH, as scripts expect GNU tools

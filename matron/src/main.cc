@@ -144,6 +144,9 @@ int matron_main(int argc, char **argv) {
 
     // blocks until quit
     event_loop();
+
+    // remember the system state (device slots, last script) before teardown
+    w_quit();
     return 0;
 }
 
