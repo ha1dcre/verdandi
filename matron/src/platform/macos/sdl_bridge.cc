@@ -10,7 +10,7 @@
  * receives, whatever sent it (mouse, keyboard, midi mapping): matron reports every
  * key/enc event back through sdl_bridge_show_control().
  *
- * the button row above the device opens the menu pages, maiden, the manual and three
+ * the button row above the device opens the menu pages, maiden, the manual and four
  * virtual devices, each in a window of its own:
  *  - GRID: libmonome sees a usb grid (vgrid_device.h), 64, 128 or 256 (the switch under
  *    it; the choice is kept in ~/.vgrid-size). click a key to press it, drag across keys to
@@ -20,6 +20,10 @@
  *  - KEYS: a two octave keyboard that norns sees as the midi device "Verdandi keys" (other
  *    apps see it too). click a key, higher up for softer; with the window in front the
  *    computer keyboard plays it (vkeys_skin.h).
+ *  - CROW: norns sees a crow on usb (vcrow_device.h: a pty with a crow simulator behind
+ *    it). drag an input's knob up/down (or use the wheel) to set its voltage, double-click
+ *    for 0 V, right-click to hold it at 5 V (a gate or trigger); the outputs show what the
+ *    script does with them.
  * the open windows are laid out round the norns window, as large as the screen allows;
  * when the last one closes, the norns window goes back.
  *
@@ -72,6 +76,8 @@
 #include "sdl_bridge.h"
 #include "skin_theme.h"
 #include "varc_skin.h"
+#include "vcrow_device.h"
+#include "vcrow_skin.h"
 #include "vgrid_device.h"
 #include "vgrid_skin.h"
 #include "vkeys_skin.h"
@@ -107,6 +113,7 @@ enum {
     DEV_INPUT_CHECK = 4, // data1 = which select it checks
     DEV_CHOOSE = 5,      // data1 folder (strdup)
     DEV_CHOOSE_CLOSE = 6,
+    DEV_CROW_STATE = 7,
 };
 
 //--- drawing (main thread only)
@@ -402,7 +409,7 @@ static void input_chosen(const char *mode, const char *bundle, const char *name)
     call_lua("input_chosen", {mode != NULL ? mode : "mic", bundle != NULL ? bundle : "", name != NULL ? name : ""});
 }
 
-//--- extra windows: grid, arc, keys
+//--- extra windows: grid, arc, keys, crow
 
 typedef struct {
     SDL_Window *window;
@@ -499,6 +506,7 @@ static void pane_pixels(const pane_t *p, int x, int y, double *px, double *py) {
 static pane_t grid_pane = {};
 static pane_t arc_pane = {};
 static pane_t keys_pane = {};
+static pane_t crow_pane = {};
 
 //--- window layout
 
@@ -552,9 +560,9 @@ static void restore_main_window(void) {
 // norns, all in one row, the extras in a column right of norns, or everything stacked,
 // whichever leaves them largest. the norns window is remembered for when they close
 static void arrange_windows(void) {
-    pane_t *open[3];
+    pane_t *open[4];
     int n = 0;
-    for (pane_t *p : {&grid_pane, &keys_pane, &arc_pane}) {
+    for (pane_t *p : {&grid_pane, &keys_pane, &arc_pane, &crow_pane}) {
         if (p->window != NULL) {
             open[n++] = p;
         }
@@ -600,12 +608,12 @@ static void arrange_windows(void) {
     }
     double s = fmin(1.0, k[best]);
     int mw = (int)(MAIN_W * s), mh = (int)(MAIN_H * s);
-    int ew[3], eh[3];
+    int ew[4], eh[4];
     for (int i = 0; i < n; i++) {
         ew[i] = (int)(open[i]->uw * s);
         eh[i] = (int)(open[i]->uh * s);
     }
-    int mx, my, ex[3], ey[3];
+    int mx, my, ex[4], ey[4];
     if (best == BELOW || best == ROW) {
         int row_w = (n - 1) * LAYOUT_GAP, row_h = 0;
         for (int i = 0; i < n; i++) {
@@ -1068,6 +1076,179 @@ static void arc_wheel(const SDL_MouseWheelEvent *w) {
         dy = -dy;
     }
     arc_turn(n, dy * ARC_WHEEL_TICKS * turn_factor());
+}
+
+//--- virtual crow window (main thread, except crow_changed)
+
+#define CROW_NAME "crow (virtual)"
+// volts per point of mouse drag, per wheel notch; right-click holds an input here
+#define CROW_DRAG_VOLTS 0.05
+#define CROW_WHEEL_VOLTS 0.1
+#define CROW_GATE_VOLTS 5.0
+
+static vcrow_device_t *vcrow = NULL;
+static vcrow_geom_t crow_geom = {};
+static double crow_knob[VCROW_INPUTS]; // each input's knob: its voltage unless held
+static int crow_held = 0;              // bit n: input n held at the gate voltage
+static int crow_drag = -1;             // input whose knob the left button drags
+static int crow_pending = 0;
+
+static void crow_changed(void *ctx) {
+    (void)ctx;
+    if (__atomic_exchange_n(&crow_pending, 1, __ATOMIC_ACQ_REL) == 0) {
+        SDL_Event ev;
+        SDL_zero(ev);
+        ev.type = device_event_type;
+        ev.user.code = DEV_CROW_STATE;
+        SDL_PushEvent(&ev);
+    }
+}
+
+static void crow_redraw(void) {
+    __atomic_store_n(&crow_pending, 0, __ATOMIC_RELEASE);
+    if (vcrow == NULL) {
+        return;
+    }
+    bool resized;
+    cairo_t *cr = pane_begin(&crow_pane, &resized);
+    if (cr == NULL) {
+        return;
+    }
+    if (resized) {
+        vcrow_skin_geom(crow_pane.w, crow_pane.h, &crow_geom);
+    }
+    static vcrow_view_t view;
+    vcrow_view(vcrow, &view);
+    vcrow_skin_draw(cr, &crow_geom, crow_pane.w, crow_pane.h, &view, crow_held);
+    pane_end(&crow_pane, cr);
+}
+
+static void toggle_crow(void) {
+    if (vcrow != NULL) {
+        // matron lets go of the pty first (dev_delete closes it), then it goes
+        vcrow_device_t *c = vcrow;
+        vcrow = NULL;
+        char *path = strdup(vcrow_path(c));
+        device_runloop_sync(^{
+          dev_list_remove(DEV_TYPE_CROW, path);
+        });
+        free(path);
+        vcrow_close(c);
+        pane_close(&crow_pane);
+        crow_held = 0;
+        crow_drag = -1;
+        skin.crow_open = 0;
+        arrange_windows();
+        redraw(true);
+        return;
+    }
+    // the firmware is norns' own lua/core/crow/virtual.lua, in the norns home
+    const char *home = getenv("HOME");
+    std::string lua_dir = std::string(home != NULL ? home : ".") + "/norns/lua";
+    vcrow = vcrow_open(lua_dir.c_str(), crow_changed, NULL);
+    if (vcrow == NULL) {
+        fprintf(stderr, "sdl_bridge: virtual crow failed\n");
+        return;
+    }
+    // the knobs stay where they were
+    for (int n = 0; n < VCROW_INPUTS; n++) {
+        vcrow_set_input(vcrow, n, crow_knob[n]);
+    }
+    int uw, uh;
+    vcrow_skin_units(&uw, &uh);
+    if (pane_open(&crow_pane, "crow", uw, uh) != NULL) {
+        arrange_windows();
+    }
+    // matron's crow init waits up to half a second for the answer to ^^i: on the device
+    // thread, as a crow plugged into usb, not here
+    char *path = strdup(vcrow_path(vcrow));
+    CFRunLoopRef rl = device_runloop();
+    CFRunLoopPerformBlock(rl, kCFRunLoopDefaultMode, ^{
+      dev_list_add(DEV_TYPE_CROW, path, strdup(CROW_NAME), NULL);
+      free(path);
+    });
+    CFRunLoopWakeUp(rl);
+    skin.crow_open = 1;
+    redraw(true);
+    crow_redraw();
+}
+
+static void crow_set(int n, double v) {
+    v = v < -5 ? -5 : (v > 10 ? 10 : v);
+    crow_knob[n] = v;
+    if (!(crow_held & (1 << n))) {
+        vcrow_set_input(vcrow, n, v);
+    }
+    crow_redraw();
+}
+
+static void crow_let_go(void) {
+    for (int n = 0; n < VCROW_INPUTS; n++) {
+        if (crow_held & (1 << n)) {
+            vcrow_set_input(vcrow, n, crow_knob[n]);
+        }
+    }
+    crow_held = 0;
+    crow_redraw();
+}
+
+static void crow_button(const SDL_MouseButtonEvent *b) {
+    if (b->type == SDL_MOUSEBUTTONUP) {
+        if (crow_drag >= 0 && b->button == SDL_BUTTON_LEFT) {
+            crow_drag = -1;
+            SDL_CaptureMouse(SDL_FALSE);
+        }
+        if (crow_held) {
+            crow_let_go();
+        }
+        return;
+    }
+    double px, py;
+    pane_pixels(&crow_pane, b->x, b->y, &px, &py);
+    int n = vcrow_skin_hit(&crow_geom, px, py);
+    if (n < 0) {
+        return;
+    }
+    bool ctrl = (SDL_GetModState() & KMOD_CTRL) != 0;
+    if (b->button == SDL_BUTTON_LEFT && !ctrl) {
+        if (b->clicks >= 2) {
+            crow_set(n, 0); // double click: 0 V
+        } else if (crow_drag < 0) {
+            crow_drag = n;
+            SDL_CaptureMouse(SDL_TRUE);
+        }
+        return;
+    }
+    // right button (or ctrl-click): the gate voltage while it is held
+    if (!(crow_held & (1 << n))) {
+        crow_held |= 1 << n;
+        vcrow_set_input(vcrow, n, CROW_GATE_VOLTS);
+        crow_redraw();
+    }
+}
+
+static void crow_motion(const SDL_MouseMotionEvent *m) {
+    if (crow_drag < 0 || (m->xrel == 0 && m->yrel == 0)) {
+        return;
+    }
+    // up or right is more
+    crow_set(crow_drag, crow_knob[crow_drag] + (m->xrel - m->yrel) * CROW_DRAG_VOLTS * turn_factor());
+}
+
+static void crow_wheel(const SDL_MouseWheelEvent *w) {
+    int mx, my;
+    SDL_GetMouseState(&mx, &my);
+    double px, py;
+    pane_pixels(&crow_pane, mx, my, &px, &py);
+    int n = vcrow_skin_hit(&crow_geom, px, py);
+    if (n < 0) {
+        return;
+    }
+    double dy = w->preciseY != 0 ? w->preciseY : w->y;
+    if (w->direction == SDL_MOUSEWHEEL_FLIPPED) {
+        dy = -dy;
+    }
+    crow_set(n, crow_knob[n] + dy * CROW_WHEEL_VOLTS * turn_factor());
 }
 
 //--- virtual keyboard window: a CoreMIDI source matron picks up like any app's port
@@ -1691,6 +1872,7 @@ static void set_skin(int style) {
     grid_redraw();
     arc_redraw();
     keys_redraw();
+    crow_redraw();
 }
 
 static void menu_item(int id) {
@@ -1716,6 +1898,9 @@ static void menu_item(int id) {
         break;
     case MAC_MENU_KEYS:
         toggle_keys();
+        break;
+    case MAC_MENU_CROW:
+        toggle_crow();
         break;
     case MAC_MENU_SKIN_DEVICE:
     case MAC_MENU_SKIN_FLAT:
@@ -1765,6 +1950,8 @@ static void button_action(int control) {
         toggle_arc();
     } else if (control == SKIN_KEYS) {
         toggle_keys();
+    } else if (control == SKIN_CROW) {
+        toggle_crow();
     } else if (control == SKIN_MUTE) {
         call_lua("output_mute", {});
     }
@@ -2042,6 +2229,8 @@ static void toggle_window(int which) {
         toggle_arc();
     } else if (which == SDL_BRIDGE_KEYS) {
         toggle_keys();
+    } else if (which == SDL_BRIDGE_CROW) {
+        toggle_crow();
     } else {
         toggle_grid();
     }
@@ -2208,6 +2397,8 @@ void sdl_bridge_run(void) {
                 mac_menu_choose_file_close();
             } else if (ev.user.code == DEV_ARC_LEDS) {
                 arc_redraw();
+            } else if (ev.user.code == DEV_CROW_STATE) {
+                crow_redraw();
             } else {
                 grid_redraw();
             }
@@ -2243,6 +2434,8 @@ void sdl_bridge_run(void) {
         case SDL_MOUSEWHEEL:
             if (is_pane(&arc_pane, ev.wheel.windowID)) {
                 arc_wheel(&ev.wheel);
+            } else if (is_pane(&crow_pane, ev.wheel.windowID)) {
+                crow_wheel(&ev.wheel);
             } else if (!is_pane(&grid_pane, ev.wheel.windowID) && !is_pane(&keys_pane, ev.wheel.windowID)) {
                 handle_wheel(&ev.wheel);
             }
@@ -2253,6 +2446,8 @@ void sdl_bridge_run(void) {
                 grid_button(&ev.button);
             } else if (is_pane(&arc_pane, ev.button.windowID)) {
                 arc_button(&ev.button);
+            } else if (is_pane(&crow_pane, ev.button.windowID)) {
+                crow_button(&ev.button);
             } else if (is_pane(&keys_pane, ev.button.windowID)) {
                 keys_button(&ev.button);
             } else {
@@ -2264,6 +2459,8 @@ void sdl_bridge_run(void) {
                 grid_motion(&ev.motion);
             } else if (is_pane(&arc_pane, ev.motion.windowID)) {
                 arc_motion(&ev.motion);
+            } else if (is_pane(&crow_pane, ev.motion.windowID)) {
+                crow_motion(&ev.motion);
             } else if (is_pane(&keys_pane, ev.motion.windowID)) {
                 keys_motion(&ev.motion);
             } else {
@@ -2287,6 +2484,17 @@ void sdl_bridge_run(void) {
                     toggle_arc();
                 } else if (repaint) {
                     arc_redraw();
+                }
+                break;
+            }
+            if (is_pane(&crow_pane, id)) {
+                if (e == SDL_WINDOWEVENT_CLOSE) {
+                    toggle_crow();
+                } else if (e == SDL_WINDOWEVENT_FOCUS_LOST && crow_held) {
+                    // the button's release goes to another window
+                    crow_let_go();
+                } else if (repaint) {
+                    crow_redraw();
                 }
                 break;
             }

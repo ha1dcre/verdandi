@@ -93,7 +93,8 @@ void *dev_crow_start(void *self) {
     uint8_t len;
 
     while (1) {
-        len = read(di->fd, di->line, 255);
+        // one byte stays free for the 0 after it
+        len = read(di->fd, di->line, sizeof(di->line) - 1);
         if (len > 0) {
             di->line[len] = 0; // add null to end of string
             if (len > 1) {
@@ -110,6 +111,7 @@ void *dev_crow_start(void *self) {
 void dev_crow_deinit(void *self) {
     struct dev_crow *di = (struct dev_crow *)self;
     tcsetattr(di->fd, TCSANOW, &di->oldtio);
+    close(di->fd);
 }
 
 void dev_crow_send(struct dev_crow *d, const char *line) {

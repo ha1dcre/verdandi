@@ -24,7 +24,7 @@ extern "C" {
 
 // controls: 1-3 = K1-K3, 4-6 = E1-E3, then the button row along the top (not on the
 // device): the menu pages MIX TAPE HOME PARAMS, MIC (input on/off), the virtual device
-// windows GRID ARC KEYS, then MAIDEN, MANUAL
+// windows GRID ARC KEYS CROW, then MAIDEN, MANUAL
 enum {
     SKIN_NONE = 0,
     SKIN_K1 = 1,
@@ -37,10 +37,11 @@ enum {
     SKIN_GRID = 12,
     SKIN_ARC = 13,
     SKIN_KEYS = 14,
-    SKIN_MAIDEN = 15,
-    SKIN_MANUAL = 16,
-    SKIN_FADER = 17, // the OUT fader right of E3 (not on the device): norns' output level
-    SKIN_MUTE = 18,  // under it: output off and back
+    SKIN_CROW = 15,
+    SKIN_MAIDEN = 16,
+    SKIN_MANUAL = 17,
+    SKIN_FADER = 18, // the OUT fader right of E3 (not on the device): norns' output level
+    SKIN_MUTE = 19,  // under it: output off and back
 };
 
 // the MIC button: what reaches norns' input. lit unless OFF
@@ -59,6 +60,7 @@ typedef struct {
     int grid_open;     // virtual grid window open
     int arc_open;      // virtual arc window open
     int keys_open;     // virtual keyboard window open
+    int crow_open;     // virtual crow window open
     int input;         // SKIN_INPUT_*: what norns' input hears (the MIC button)
     int button_down;   // button held by the mouse, SKIN_NONE if none
     int recording;     // a gif of the screen is being recorded

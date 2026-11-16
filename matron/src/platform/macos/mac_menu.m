@@ -161,6 +161,7 @@ void mac_menu_install(void (*on_item)(int id), void (*on_import)(const char *pat
     add(devices, @"Grid  (F6)", @"", 0, MAC_MENU_GRID);
     add(devices, @"Keyboard  (F7)", @"", 0, MAC_MENU_KEYS);
     add(devices, @"Arc  (F8)", @"", 0, MAC_MENU_ARC);
+    add(devices, @"Crow  (F9)", @"", 0, MAC_MENU_CROW);
     if (app_audio_available()) {
         [devices addItem:[NSMenuItem separatorItem]];
         NSMenuItem *from = [devices addItemWithTitle:@"Audio Input" action:nil keyEquivalent:@""];

@@ -3625,7 +3625,7 @@ int _open_url(lua_State *l) {
 /***
  * macOS: open or close a virtual device window
  * @function grid_window
- * @tparam string which "grid" (also with no argument), "arc" or "keys"
+ * @tparam string which "grid" (also with no argument), "arc", "keys" or "crow"
  */
 int _grid_window(lua_State *l) {
     int which = SDL_BRIDGE_GRID;
@@ -3635,6 +3635,8 @@ int _grid_window(lua_State *l) {
             which = SDL_BRIDGE_ARC;
         } else if (strcmp(s, "keys") == 0) {
             which = SDL_BRIDGE_KEYS;
+        } else if (strcmp(s, "crow") == 0) {
+            which = SDL_BRIDGE_CROW;
         } else if (strcmp(s, "grid") != 0) {
             return luaL_error(l, "grid_window: unknown window '%s'", s);
         }

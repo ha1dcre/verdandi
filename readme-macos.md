@@ -132,7 +132,7 @@ path in lua).
 
 buttons above the device (not on the hardware): the menu pages (`EVENT_WINDOW_BUTTON` ->
 `_norns.window_button` in `lua/core/menu.lua`), MIC (unplugs system:capture from
-crone:input_1/2 through jack_disconnect, kept in `~/norns/.mic-off`), GRID, ARC, KEYS,
+crone:input_1/2 through jack_disconnect, kept in `~/norns/.mic-off`), GRID, ARC, KEYS, CROW,
 MAIDEN, MANUAL (`macos/manual/manual.html`; opened by `open_url.c`, http(s) and paths only).
 opening a device window lays all windows out to fit the screen (`arrange_windows`).
 
@@ -142,6 +142,18 @@ draws the window. GRID or F6 opens it; 64, 128 or 256 (switch under it, kept in
 `~/norns/.vgrid-size`). the virtual arc is the same pty device answering as 4 encoders
 (libmonome then reports 0x0 keys, which matron takes for an arc; its name starts "monome arc"
 because `lua/core/startup.lua` routes by name), drawn by `varc_skin.c`; ARC or F8.
+
+virtual crow: CROW or F9 (Devices > Crow). `vcrow_device.c` opens a pty and registers it as
+`DEV_TYPE_CROW`, so matron's `device_crow.cc` and `lua/core/crow.lua` talk to it as to a crow
+on usb (^^i, lua text, ^^events back). behind the pty `vcrow_sim.c` runs
+`lua/core/crow/virtual.lua` in a lua state of its own: outputs (volts, slew, shape, scale, asl
+actions: to/loop/held/lock/times/dyn, lfo/pulse/ar/adsr/oscillate/ramp), inputs (stream,
+change, window, scale, volume, peak, freq, clock), metro, delay, clock, public, crow.reset,
+script upload (^^s/^^e/^^w). no ii bus: ii calls do nothing (said once). an endless loop is
+stopped after ~20M instructions. `vcrow_skin.c` draws the window: drag an input knob (or the
+wheel) for -5..+10 V, double-click for 0 V, right-click holds 5 V; outputs glow amber/blue,
+every column has a 2 s scope. one crow at a time, as on norns: the last one plugged in is
+`norns.crow.dev`.
 
 virtual keyboard: KEYS or F7. `vkeys_skin.c` (layout, hit test, computer keys by HID usage)
 and a CoreMIDI source "norns keys" made in `sdl_bridge.cc`; the device monitor picks it up
@@ -190,7 +202,11 @@ cc -std=c11 -I matron/src/platform/macos macos/tests/window_keys_test.c \
 cc -std=c11 -I matron/src/platform/macos $(pkg-config --cflags --libs cairo) \
    macos/tests/device_skin_test.c matron/src/platform/macos/device_skin.c \
    matron/src/platform/macos/vgrid_skin.c matron/src/platform/macos/varc_skin.c \
-   matron/src/platform/macos/vkeys_skin.c -o /tmp/dst && /tmp/dst [png_dir]
+   matron/src/platform/macos/vkeys_skin.c matron/src/platform/macos/vcrow_skin.c \
+   matron/src/platform/macos/skin_theme.c -o /tmp/dst && /tmp/dst [png_dir [flat]]
+P=<deps>/prefix; cc -std=c11 -I matron/src/platform/macos -I $P/include macos/tests/vcrow_test.c \
+   matron/src/platform/macos/vcrow_sim.c matron/src/platform/macos/vcrow_device.c \
+   $P/lib/liblua.a -o /tmp/vct && /tmp/vct
 P=<deps>/prefix; cc -std=c11 -I matron/src/platform/macos -I $P/include macos/tests/vgrid_test.c \
    matron/src/platform/macos/vgrid_proto.c matron/src/platform/macos/vgrid_device.c \
    -L $P/lib -lmonome -o /tmp/vgt && DYLD_LIBRARY_PATH=$P/lib /tmp/vgt

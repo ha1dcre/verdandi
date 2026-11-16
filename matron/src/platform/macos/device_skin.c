@@ -27,22 +27,24 @@ static const double fader_cap_w = 34, fader_cap_h = 18;
 static const double mute_x = 886, mute_y = 520, mute_w = 54, mute_h = 34;
 static const double bezel_pad = 14;
 
-// the button row along the top: menu pages on the left, tools on the right
+// the button row along the top: menu pages on the left, tools on the right, from the left
+// of the bezel to the right of E3 (77-865): 63 wide, 6 apart, 23.5 between the groups
 typedef struct {
     double x;
     const char *label;
 } button_t;
 static const button_t buttons[] = {
-    {77, "MIX"}, {153, "TAPE"}, {229, "HOME"}, {305, "PARAMS"}, // SKIN_PAGE1..4
-    {398, "MIC"},
-    {474, "GRID"},
-    {550, "ARC"},
-    {626, "KEYS"}, // SKIN_MIC..KEYS
-    {719, "MAIDEN"},
-    {795, "MANUAL"}, // SKIN_MAIDEN, MANUAL
+    {77, "MIX"}, {146, "TAPE"}, {215, "HOME"}, {284, "PARAMS"}, // SKIN_PAGE1..4
+    {370.5, "MIC"},
+    {439.5, "GRID"},
+    {508.5, "ARC"},
+    {577.5, "KEYS"},
+    {646.5, "CROW"}, // SKIN_MIC..CROW
+    {733, "MAIDEN"},
+    {802, "MANUAL"}, // SKIN_MAIDEN, MANUAL
 };
 #define NBUTTONS ((int)(sizeof buttons / sizeof buttons[0]))
-static const double button_y = 70, button_w = 70, button_h = 40;
+static const double button_y = 70, button_w = 63, button_h = 40;
 
 // the knobs are endless encoders: no pointer, only the knurl moves. one detent turns it by
 // a third of the knurl spacing, so it always visibly moves the right way
@@ -478,6 +480,7 @@ static void draw_button(cairo_t *cr, int i, const skin_state_t *st) {
     int down = st->button_down == id;
     int lit = (id <= SKIN_PAGE4 && st->page == i + 1) || (id == SKIN_GRID && st->grid_open) ||
               (id == SKIN_ARC && st->arc_open) || (id == SKIN_KEYS && st->keys_open) ||
+              (id == SKIN_CROW && st->crow_open) ||
               (id == SKIN_MIC && st->input != SKIN_INPUT_OFF);
     double x = b->x, y = button_y, dy = down ? 1.2 : 0;
 
@@ -523,13 +526,13 @@ static void draw_button(cairo_t *cr, int i, const skin_state_t *st) {
 
     // led or arrow on the left, label in the rest
     double mid = y + dy + button_h / 2;
-    if (id <= SKIN_KEYS) {
-        draw_led(cr, x + 12, mid, lit);
+    if (id <= SKIN_CROW) {
+        draw_led(cr, x + 11, mid, lit);
     } else {
-        draw_out_arrow(cr, x + 12, mid);
+        draw_out_arrow(cr, x + 11, mid);
     }
     cairo_select_font_face(cr, "Helvetica Neue", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-    double area = x + 20, area_w = button_w - 23;
+    double area = x + 18, area_w = button_w - 20;
     static const char *input_label[] = {"OFF", "MIC", "SYS", "APP"};
     const char *label = b->label;
     if (id == SKIN_MIC && st->input >= SKIN_INPUT_OFF && st->input <= SKIN_INPUT_APP) {

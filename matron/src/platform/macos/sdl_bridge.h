@@ -36,6 +36,7 @@ extern void sdl_bridge_show_control(int kind, int n, int value);
 #define SDL_BRIDGE_GRID 1
 #define SDL_BRIDGE_ARC 2
 #define SDL_BRIDGE_KEYS 3
+#define SDL_BRIDGE_CROW 4
 extern void sdl_bridge_toggle_window(int which);
 
 // any thread, does not block: what norns' input hears besides the Mac's own input (the MIC

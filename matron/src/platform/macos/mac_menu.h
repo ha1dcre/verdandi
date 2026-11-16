@@ -26,6 +26,7 @@ enum {
     MAC_MENU_GRID,
     MAC_MENU_ARC,
     MAC_MENU_KEYS,
+    MAC_MENU_CROW,
     MAC_MENU_SKIN_DEVICE, // View: the windows drawn as the hardware
     MAC_MENU_SKIN_FLAT,   // View: dark flat
 };

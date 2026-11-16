@@ -4,11 +4,12 @@
  * cc -std=c11 -Wall -Wextra -I matron/src/platform/macos $(pkg-config --cflags --libs cairo) \
  *    macos/tests/device_skin_test.c matron/src/platform/macos/device_skin.c \
  *    matron/src/platform/macos/vgrid_skin.c matron/src/platform/macos/varc_skin.c \
- *    matron/src/platform/macos/vkeys_skin.c matron/src/platform/macos/skin_theme.c \
+ *    matron/src/platform/macos/vkeys_skin.c matron/src/platform/macos/vcrow_skin.c \
+ *    matron/src/platform/macos/skin_theme.c \
  *    -o /tmp/dst && /tmp/dst [out_dir [flat]]
  *
- * with out_dir it also writes skin_<w>x<h>.png renders (and the grid, arc and keyboard
- * windows) to look at; with flat, in the dark flat style.
+ * with out_dir it also writes skin_<w>x<h>.png renders (and the grid, arc, keyboard and
+ * crow windows) to look at; with flat, in the dark flat style.
  */
 
 #include <math.h>
@@ -18,6 +19,7 @@
 #include "device_skin.h"
 #include "skin_theme.h"
 #include "varc_skin.h"
+#include "vcrow_skin.h"
 #include "vgrid_skin.h"
 #include "vkeys_skin.h"
 
@@ -98,18 +100,19 @@ static void test_geom(int w, int h) {
           "%dx%d: off the oled", w, h);
     CHECK(skin_hit(&g, px(&g, 500), py(&g, 170)) == SKIN_NONE, "%dx%d: top hits a control", w, h);
     CHECK(skin_hit(&g, 1, 1) == SKIN_NONE, "%dx%d: corner hits a control", w, h);
-    // the button row: pages, mic, grid, arc, keys, maiden, manual, left to right
-    static const double bx[10] = {77, 153, 229, 305, 398, 474, 550, 626, 719, 795};
-    for (int i = 0; i < 10; i++) {
-        int hb = skin_hit(&g, px(&g, bx[i] + 35), py(&g, 90));
+    // the button row: pages, mic, grid, arc, keys, crow, maiden, manual, left to right
+    static const double bx[11] = {77, 146, 215, 284, 370.5, 439.5, 508.5, 577.5, 646.5, 733, 802};
+    for (int i = 0; i < 11; i++) {
+        int hb = skin_hit(&g, px(&g, bx[i] + 31), py(&g, 90));
         CHECK(hb == SKIN_PAGE1 + i, "%dx%d: button %d hits %d", w, h, i, hb);
     }
-    CHECK(skin_hit(&g, px(&g, 626 + 35), py(&g, 90)) == SKIN_KEYS, "%dx%d: KEYS", w, h);
-    CHECK(skin_hit(&g, px(&g, 795 + 35), py(&g, 90)) == SKIN_MANUAL, "%dx%d: MANUAL is last", w, h);
-    CHECK(skin_hit(&g, px(&g, 386), py(&g, 90)) == SKIN_NONE, "%dx%d: gap between button groups", w, h);
-    CHECK(skin_hit(&g, px(&g, 707), py(&g, 90)) == SKIN_NONE, "%dx%d: gap before maiden", w, h);
+    CHECK(skin_hit(&g, px(&g, 577.5 + 31), py(&g, 90)) == SKIN_KEYS, "%dx%d: KEYS", w, h);
+    CHECK(skin_hit(&g, px(&g, 646.5 + 31), py(&g, 90)) == SKIN_CROW, "%dx%d: CROW", w, h);
+    CHECK(skin_hit(&g, px(&g, 802 + 31), py(&g, 90)) == SKIN_MANUAL, "%dx%d: MANUAL is last", w, h);
+    CHECK(skin_hit(&g, px(&g, 359), py(&g, 90)) == SKIN_NONE, "%dx%d: gap between button groups", w, h);
+    CHECK(skin_hit(&g, px(&g, 721), py(&g, 90)) == SKIN_NONE, "%dx%d: gap before maiden", w, h);
     // nothing reaches past the last knob (the box edge)
-    CHECK(795 + 70 <= 865 + 0.01, "buttons end at E3's edge");
+    CHECK(802 + 63 <= 865 + 0.01, "buttons end at E3's edge");
     CHECK(skin_hit(&g, px(&g, 125), py(&g, 160)) == SKIN_NONE, "%dx%d: below the buttons", w, h);
     // K2 and E2 do not overlap: between them is nothing
     CHECK(skin_hit(&g, px(&g, 633), py(&g, 481)) == SKIN_NONE, "%dx%d: K2/E2 overlap", w, h);
@@ -307,12 +310,68 @@ static void test_vkeys(const char *dir) {
     cairo_surface_destroy(out);
 }
 
+static void test_vcrow(const char *dir) {
+    int uw, uh;
+    vcrow_skin_units(&uw, &uh);
+    CHECK(uw > 800 && uw < 900 && uh > 300 && uh < 360, "crow: %dx%d units", uw, uh);
+    int w = uw * 2, h = uh * 2;
+    vcrow_geom_t g;
+    vcrow_skin_geom(w, h, &g);
+    // layout units: input columns centred at 104 and 228, outputs from 380, knobs at y 146
+#define CX(u) (g.ox + (u) * g.s)
+#define CY(u) (g.oy + (u) * g.s)
+    CHECK(vcrow_skin_hit(&g, CX(104), CY(146)) == 0, "crow: input 1 knob");
+    CHECK(vcrow_skin_hit(&g, CX(228), CY(146)) == 1, "crow: input 2 knob");
+    CHECK(vcrow_skin_hit(&g, CX(228), CY(290)) == 1, "crow: input 2 scope");
+    CHECK(vcrow_skin_hit(&g, CX(380), CY(146)) == -1, "crow: output 1 is no input");
+    CHECK(vcrow_skin_hit(&g, CX(104), CY(20)) == -1, "crow: above the labels");
+    CHECK(vcrow_skin_hit(&g, 1, 1) == -1, "crow: corner");
+#undef CX
+#undef CY
+    if (dir == NULL) {
+        return;
+    }
+    static vcrow_view_t v;
+    memset(&v, 0, sizeof v);
+    v.in[0] = 2.5;
+    v.in[1] = -3;
+    v.out[0] = 3.5;
+    v.out[1] = -2;
+    v.out[2] = 0;
+    v.out[3] = 10;
+    snprintf(v.mode[0], VCROW_LABEL, "stream 0.1s");
+    snprintf(v.mode[1], VCROW_LABEL, "change 1V rising");
+    for (int k = 0; k < VCROW_SCOPE; k++) {
+        double t = k * VCROW_SCOPE_BIN;
+        float lfo = (float)(5 * sin(2 * M_PI * t));
+        float fast_lo = -1.5f, fast_hi = 1.5f; // an oscillator far above the bin rate
+        v.scope_min[0][k] = v.scope_max[0][k] = k < 80 ? 0.0f : 2.5f;
+        v.scope_min[1][k] = v.scope_max[1][k] = -3;
+        v.scope_min[2][k] = v.scope_max[2][k] = lfo;
+        v.scope_min[3][k] = fast_lo;
+        v.scope_max[3][k] = fast_hi;
+        v.scope_min[4][k] = v.scope_max[4][k] = (k / 20) % 2 ? 5.0f : 0.0f;
+        v.scope_min[5][k] = v.scope_max[5][k] = 10;
+    }
+    for (int held = 0; held <= 1; held++) {
+        cairo_surface_t *out = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
+        cairo_t *cr = cairo_create(out);
+        vcrow_skin_draw(cr, &g, w, h, &v, held ? 2 : 0);
+        char path[512];
+        snprintf(path, sizeof path, "%s/vcrow%s.png", dir, held ? "_held" : "");
+        CHECK(cairo_surface_write_to_png(out, path) == CAIRO_STATUS_SUCCESS, "write %s", path);
+        cairo_destroy(cr);
+        cairo_surface_destroy(out);
+    }
+}
+
 int main(int argc, char **argv) {
     if (argc > 2 && strcmp(argv[2], "flat") == 0) {
         skin_set_style(SKIN_STYLE_FLAT);
     }
     test_varc(argc > 1 ? argv[1] : NULL);
     test_vkeys(argc > 1 ? argv[1] : NULL);
+    test_vcrow(argc > 1 ? argv[1] : NULL);
     for (int size = 1; size <= 3; size++) {
         test_vgrid(argc > 1 ? argv[1] : NULL, size);
     }
@@ -328,6 +387,7 @@ int main(int argc, char **argv) {
                              .page = 4,
                              .grid_open = 1,
                              .keys_open = 1,
+                             .crow_open = 1,
                              .button_down = SKIN_MAIDEN,
                              .recording = 1,
                              .out_level = 0.8,

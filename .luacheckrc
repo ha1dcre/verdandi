@@ -110,6 +110,17 @@ files["lua/core/crow/public.lua"] = {
     },
 }
 
+files["lua/core/crow/virtual.lua"] = {
+    ignore = {
+        "211", -- unused local variable
+        "212", -- unused argument
+        "213", -- unused loop variable
+        "311", -- value assigned to variable is never used
+        "421", -- shadowing a local variable
+        "431", -- shadowing a local variable which is an upvalue
+    },
+}
+
 files["lua/core/crow/quote.lua"] = {
     ignore = {
         "211", -- unused local variable
